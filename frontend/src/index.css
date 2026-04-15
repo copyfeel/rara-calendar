@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 @import './styles/responsive.css';
 
@@ -92,13 +92,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-pastel-100;
+  background-color: var(--color-pastel-100);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-pastel-300 rounded;
+  background-color: var(--color-pastel-300);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-pastel-400;
+  background-color: var(--color-pastel-400);
 }
