@@ -1,13 +1,16 @@
+import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
-import { getMonthCalendarDays, getTodayDate, getRelativeDateString, solarToLunar } from '../../utils/dateHelper';
+import { getMonthCalendarDays, getTodayDate, solarToLunar } from '../../utils/dateHelper';
 import './Calendar.css';
 
 interface CalendarProps {
   currentMonth: Date;
+  onMonthChange?: (date: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ currentMonth }) => {
+const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   const { events, selectedDate, setSelectedDate } = useEventStore();
+  const [touchStartX, setTouchStartX] = useState<number>(0);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth() + 1;
@@ -26,10 +29,34 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth }) => {
     setSelectedDate(dateStr);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!onMonthChange) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    const threshold = 50; // 50px 이상 드래그 시 변경
+
+    if (Math.abs(diff) > threshold) {
+      const newDate = new Date(currentMonth);
+      if (diff > 0) {
+        // 오른쪽에서 왼쪽 드래그 = 다음 달
+        newDate.setMonth(newDate.getMonth() + 1);
+      } else {
+        // 왼쪽에서 오른쪽 드래그 = 이전 달
+        newDate.setMonth(newDate.getMonth() - 1);
+      }
+      onMonthChange(newDate);
+    }
+  };
+
   return (
-    <div className="p-4 bg-white">
-      {/* 캘린더 그리드 */}
-      <div className="grid grid-cols-7 gap-1 mb-4">
+    <div className="bg-white" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      {/* 캘린더 그리드 - 간격 없음, 경계선만 유지 */}
+      <div className="grid grid-cols-7 gap-0">
         {calendarDays.map((day, idx) => {
           const dateStr = day
             ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -46,7 +73,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth }) => {
               key={`${idx}-${day}`}
               onClick={() => handleDateClick(day)}
               className={`
-                min-h-32 p-2 border border-pastel-200 cursor-pointer transition
+                min-h-16 p-0 border border-pastel-200 cursor-pointer transition
                 ${!isCurrentMonth ? 'bg-pastel-50 text-pastel-300' : ''}
                 ${isSelected ? 'bg-pastel-200' : 'bg-white'}
                 ${dayEvents.length > 0 && !isSelected ? 'bg-pastel-100' : ''}
@@ -54,54 +81,50 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth }) => {
                 hover:bg-pastel-100
               `}
             >
-              {/* 날짜 및 오늘 표시 */}
-              <div className="flex items-start justify-between mb-1">
-                <span
-                  className={`font-bold text-sm ${
-                    idx % 7 === 0 && day ? 'text-red-500' : 'text-pastel-700'
-                  }`}
-                >
-                  {day}
-                </span>
-                {isToday && (
-                  <span className="text-xs text-pastel-orange font-semibold">오늘</span>
-                )}
-              </div>
-
-              {/* 음력 표시 */}
-              {lunarDate && (
-                <div className="text-xs text-pastel-400 mb-1">{lunarDate}</div>
-              )}
-
-              {/* 일정 미리보기 */}
-              <div className="text-xs space-y-1">
-                {dayEvents.slice(0, 1).map((event, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-pastel-200 text-pastel-700 px-1 py-0.5 rounded truncate"
+              {/* 캘린더 칸 내부 내용 */}
+              <div className="p-1 h-full flex flex-col">
+                {/* 날짜 및 오늘 표시 */}
+                <div className="flex items-start justify-between mb-0.5">
+                  <span
+                    className={`font-bold text-xs ${
+                      idx % 7 === 0 && day ? 'text-red-500' : 'text-pastel-700'
+                    }`}
                   >
-                    {event.title.substring(0, 5)}
-                  </div>
-                ))}
-                {dayEvents.length > 1 && (
-                  <div className="text-pastel-500 font-semibold">
-                    +{dayEvents.length - 1}
-                  </div>
+                    {day}
+                  </span>
+                  {isToday && (
+                    <span className="text-xs text-pastel-orange font-semibold">오늘</span>
+                  )}
+                </div>
+
+                {/* 음력 표시 */}
+                {lunarDate && (
+                  <div className="text-xs text-pastel-400 mb-0.5">{lunarDate}</div>
                 )}
+
+                {/* 일정 미리보기 */}
+                <div className="text-xs space-y-0.5">
+                  {dayEvents.slice(0, 1).map((event, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-pastel-200 text-pastel-700 px-0.5 py-0.5 rounded truncate text-xs"
+                    >
+                      {event.title.substring(0, 5)}
+                    </div>
+                  ))}
+                  {dayEvents.length > 1 && (
+                    <div className="text-pastel-500 font-semibold text-xs">
+                      +{dayEvents.length - 1}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 오늘 기준 표시일 */}
-      {selectedDate && selectedDate !== today && (
-        <div className="border-t border-pastel-200 pt-3 text-center">
-          <span className="text-sm text-pastel-600">
-            {getRelativeDateString(selectedDate)}
-          </span>
-        </div>
-      )}
+      {/* 오늘 기준 표시일 - EventDisplay로 이동되었으므로 여기서는 삭제 */}
     </div>
   );
 };

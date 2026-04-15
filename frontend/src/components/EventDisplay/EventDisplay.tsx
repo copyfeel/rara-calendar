@@ -1,13 +1,13 @@
-import dayjs from 'dayjs';
 import { useEventStore } from '../../store/eventStore';
 import { getTodayDate, getRelativeDateString } from '../../utils/dateHelper';
 import type { Event } from '../../types/event';
 
 interface EventDisplayProps {
   onOpenEventEditor: (event?: Event) => void;
+  onOpenTodoList?: () => void;
 }
 
-const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor }) => {
+const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTodoList }) => {
   const { events, selectedDate, setSelectedDate, deleteEvent } = useEventStore();
   const today = getTodayDate();
 
@@ -45,27 +45,18 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor }) => {
   };
 
   const isToday = selectedDate === today;
+  const relativeDate = getRelativeDateString(selectedDate);
 
   return (
     <div className="bg-pastel-50 border-t-2 border-pastel-200">
-      {/* 날짜 표시 */}
-      <div className="px-4 py-3 bg-white border-b border-pastel-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm text-pastel-500">
-              {dayjs(selectedDate).format('YYYY년 MM월 DD일 (dddd)')}
-            </div>
-            {!isToday && (
-              <div className="text-xs text-pastel-orange font-semibold mt-1">
-                {getRelativeDateString(selectedDate)}
-              </div>
-            )}
-          </div>
-          {isToday && (
-            <span className="text-xs text-pastel-orange font-semibold">오늘</span>
-          )}
+      {/* 날짜 표시 - "~일 후" 부분만 표시 */}
+      {!isToday && relativeDate && (
+        <div className="px-4 py-2 bg-white border-b border-pastel-200 text-center">
+          <span className="text-sm text-pastel-orange font-semibold">
+            {relativeDate}
+          </span>
         </div>
-      </div>
+      )}
 
       {/* 일정 리스트 */}
       <div className="p-4 space-y-3 max-h-48 overflow-y-auto">
@@ -114,8 +105,9 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor }) => {
 
       {/* 하단 컨트롤 바 */}
       <div className="sticky bottom-0 bg-white border-t border-pastel-200 px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex gap-2">
+            {/* 좌/우 이동 버튼 */}
             <button
               onClick={handlePrevEvent}
               disabled={!previousEventDate}
@@ -127,13 +119,15 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor }) => {
               </svg>
             </button>
 
+            {/* Today 버튼 */}
             <button
               onClick={handleToday}
-              className="px-4 py-2 text-pastel-orange hover:bg-pastel-100 rounded-lg transition font-semibold"
+              className="px-4 py-2 text-pastel-orange border-2 border-pastel-orange rounded-lg transition font-semibold hover:bg-pastel-50"
             >
               Today
             </button>
 
+            {/* 삭제 버튼 */}
             <button
               onClick={() => {
                 if (selectedEvents.length > 0) {
@@ -156,6 +150,7 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor }) => {
               </svg>
             </button>
 
+            {/* 다음 일정 버튼 */}
             <button
               onClick={handleNextEvent}
               disabled={!nextEventDate}
@@ -168,13 +163,25 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor }) => {
             </button>
           </div>
 
-          <button
-            onClick={() => onOpenEventEditor()}
-            className="px-4 py-2 bg-pastel-400 text-white rounded-lg hover:bg-pastel-500 transition font-semibold"
-            title="새 일정 추가"
-          >
-            + 추가
-          </button>
+          <div className="flex gap-2">
+            {/* Todo 버튼 */}
+            {onOpenTodoList && (
+              <button
+                onClick={onOpenTodoList}
+                className="px-4 py-2 text-pastel-orange border-2 border-pastel-orange rounded-lg transition font-semibold hover:bg-pastel-50"
+              >
+                Todo
+              </button>
+            )}
+
+            {/* Add 버튼 */}
+            <button
+              onClick={() => onOpenEventEditor()}
+              className="px-4 py-2 bg-pastel-400 text-white rounded-lg hover:bg-pastel-500 transition font-semibold border-2 border-pastel-400"
+            >
+              + add
+            </button>
+          </div>
         </div>
       </div>
     </div>

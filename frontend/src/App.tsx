@@ -54,12 +54,13 @@ function App() {
         onMonthChange={setCurrentMonth}
       />
       <main className="flex-1 overflow-auto flex flex-col">
-        <Calendar currentMonth={currentMonth} />
+        <Calendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
         <EventDisplay
           onOpenEventEditor={(event) => {
             setEditingEvent(event);
             setShowEventEditor(true);
           }}
+          onOpenTodoList={() => setShowTodoList(true)}
         />
       </main>
 
@@ -85,17 +86,6 @@ function App() {
       {showAdminPanel && (
         <AdminPanel onClose={() => setShowAdminPanel(false)} />
       )}
-
-      {/* Todo List 트리거 버튼 (우측 하단) */}
-      <button
-        onClick={() => setShowTodoList(!showTodoList)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-pastel-400 text-white rounded-full shadow-lg hover:bg-pastel-500 transition flex items-center justify-center"
-        title="투두 리스트"
-      >
-        <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-        </svg>
-      </button>
     </div>
   );
 }
