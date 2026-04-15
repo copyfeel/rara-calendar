@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useEventStore } from './store/eventStore';
 import { useNotification } from './hooks/useNotification';
 import Calendar from './components/Calendar/Calendar';
@@ -20,6 +20,31 @@ function App() {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // 캘린더 하단 위치 계산 (투두 리스트 최대 높이 결정)
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const [calendarBottom, setCalendarBottom] = useState<number>(0);
+
+  const updateCalendarBottom = useCallback(() => {
+    if (calendarRef.current) {
+      const rect = calendarRef.current.getBoundingClientRect();
+      setCalendarBottom(rect.bottom);
+    }
+  }, []);
+
+  useEffect(() => {
+    // 초기 측정
+    updateCalendarBottom();
+
+    // 리사이즈 및 방향 전환 시 재측정
+    window.addEventListener('resize', updateCalendarBottom);
+    window.addEventListener('orientationchange', updateCalendarBottom);
+
+    return () => {
+      window.removeEventListener('resize', updateCalendarBottom);
+      window.removeEventListener('orientationchange', updateCalendarBottom);
+    };
+  }, [updateCalendarBottom, currentMonth]);
+
   // 알람 기능 활성화
   useNotification();
 
@@ -33,8 +58,6 @@ function App() {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-
-    // 자동 저장 (30초마다)
     const autoSaveInterval = setInterval(() => {
       saveToStorage();
     }, 30000);
@@ -54,7 +77,10 @@ function App() {
         onMonthChange={setCurrentMonth}
       />
       <main className="flex-1 overflow-auto flex flex-col">
-        <Calendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
+        {/* calendarRef로 캘린더 하단 위치 측정 */}
+        <div ref={calendarRef}>
+          <Calendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
+        </div>
         <EventDisplay
           onOpenEventEditor={(event) => {
             setEditingEvent(event);
@@ -79,8 +105,12 @@ function App() {
         <SearchScreen onClose={() => setShowSearchScreen(false)} />
       )}
 
+      {/* 투두 리스트 - calendarBottom 전달 */}
       {showTodoList && (
-        <TodoList onClose={() => setShowTodoList(false)} />
+        <TodoList
+          onClose={() => setShowTodoList(false)}
+          calendarBottom={calendarBottom}
+        />
       )}
 
       {showAdminPanel && (

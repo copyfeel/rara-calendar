@@ -85,8 +85,9 @@ const lunarCalendar = require('lunar-calendar');
 export const solarToLunar = (year: number, month: number, day: number): string => {
   try {
     const lunarData = lunarCalendar.solarToLunar(year, month, day);
-    if (lunarData && lunarData.lunarDay) {
-      return `음 ${lunarData.lunarDay}`;
+    if (lunarData && lunarData.lunarMonth && lunarData.lunarDay) {
+      // '음월.일' 형식: 예) 음2.28
+      return `음${lunarData.lunarMonth}.${lunarData.lunarDay}`;
     }
   } catch (error) {
     console.error('Error converting to lunar date:', error);
