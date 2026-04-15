@@ -55,7 +55,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
 
   return (
     <div className="bg-white" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-      {/* 캘린더 그리드 - 간격 없음, 경계선만 유지 */}
+      {/* 캘린더 그리드 - border 완전 제거 */}
       <div className="grid grid-cols-7 gap-0">
         {calendarDays.map((day, idx) => {
           const dateStr = day
@@ -73,34 +73,37 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
               key={`${idx}-${day}`}
               onClick={() => handleDateClick(day)}
               className={`
-                min-h-16 p-0 border border-pastel-200 cursor-pointer transition
+                min-h-16 p-0 cursor-pointer transition
                 ${!isCurrentMonth ? 'bg-pastel-50 text-pastel-300' : ''}
                 ${isSelected ? 'bg-pastel-200' : 'bg-white'}
                 ${dayEvents.length > 0 && !isSelected ? 'bg-pastel-100' : ''}
-                ${isToday ? 'border-2 border-pastel-accent' : ''}
+                ${isToday ? 'border-4 border-pastel-accent' : 'border border-pastel-200'}
                 hover:bg-pastel-100
               `}
             >
               {/* 캘린더 칸 내부 내용 */}
               <div className="p-1 h-full flex flex-col">
-                {/* 날짜 및 오늘 표시 */}
-                <div className="flex items-start justify-between mb-0.5">
-                  <span
-                    className={`font-bold text-xs ${
-                      idx % 7 === 0 && day ? 'text-red-500' : 'text-pastel-700'
-                    }`}
-                  >
-                    {day}
-                  </span>
+                {/* 날짜 및 오늘 표시, 음력 날짜 */}
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-baseline gap-0.5">
+                    <span
+                      className={`font-bold text-xs ${
+                        idx % 7 === 0 && day ? 'text-red-500' : 'text-pastel-700'
+                      }`}
+                    >
+                      {day}
+                    </span>
+                    {/* 음력 날짜 - 양력 우측, 50% 크기, 연한 그레이 */}
+                    {lunarDate && (
+                      <span className="text-xs text-pastel-300 font-light">
+                        {lunarDate}
+                      </span>
+                    )}
+                  </div>
                   {isToday && (
                     <span className="text-xs text-pastel-orange font-semibold">오늘</span>
                   )}
                 </div>
-
-                {/* 음력 표시 */}
-                {lunarDate && (
-                  <div className="text-xs text-pastel-400 mb-0.5">{lunarDate}</div>
-                )}
 
                 {/* 일정 미리보기 */}
                 <div className="text-xs space-y-0.5">

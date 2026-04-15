@@ -81,12 +81,12 @@ const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth
         </button>
       </div>
 
-      {/* 요일 표시 - 높이와 글자 크기 70% */}
+      {/* 요일 표시 - 높이와 글자 크기 40% 축소 */}
       <div className="grid grid-cols-7 gap-0">
         {weekDays.map((day, idx) => (
           <div
             key={day}
-            className={`py-1.5 text-center font-semibold text-sm ${
+            className={`py-0.5 text-center font-semibold text-xs ${
               idx === 0 ? 'text-red-500' : 'text-pastel-600'
             }`}
           >

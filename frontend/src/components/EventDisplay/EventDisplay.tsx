@@ -48,7 +48,7 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
   const relativeDate = getRelativeDateString(selectedDate);
 
   return (
-    <div className="bg-pastel-50 border-t-2 border-pastel-200">
+    <div className="bg-pastel-50 border-t-2 border-pastel-200 flex flex-col flex-1">
       {/* 날짜 표시 - "~일 후" 부분만 표시 */}
       {!isToday && relativeDate && (
         <div className="px-4 py-2 bg-white border-b border-pastel-200 text-center">
@@ -59,7 +59,7 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
       )}
 
       {/* 일정 리스트 */}
-      <div className="p-4 space-y-3 max-h-48 overflow-y-auto">
+      <div className="p-4 space-y-3 flex-1 overflow-y-auto">
         {selectedEvents.length === 0 ? (
           <div className="text-center text-pastel-400 py-6">
             <p>등록된 일정이 없습니다</p>
@@ -122,7 +122,7 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
             {/* Today 버튼 */}
             <button
               onClick={handleToday}
-              className="px-4 py-2 text-pastel-orange border-2 border-pastel-orange rounded-lg transition font-semibold hover:bg-pastel-50"
+              className="px-4 py-2 text-pastel-orange rounded-lg transition font-semibold hover:bg-pastel-50"
             >
               Today
             </button>
@@ -168,7 +168,7 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
             {onOpenTodoList && (
               <button
                 onClick={onOpenTodoList}
-                className="px-4 py-2 text-pastel-orange border-2 border-pastel-orange rounded-lg transition font-semibold hover:bg-pastel-50"
+                className="px-4 py-2 text-pastel-orange rounded-lg transition font-semibold hover:bg-pastel-50"
               >
                 Todo
               </button>
@@ -177,7 +177,7 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
             {/* Add 버튼 */}
             <button
               onClick={() => onOpenEventEditor()}
-              className="px-4 py-2 bg-pastel-400 text-white rounded-lg hover:bg-pastel-500 transition font-semibold border-2 border-pastel-400"
+              className="px-4 py-2 bg-pastel-400 text-white rounded-lg hover:bg-pastel-500 transition font-semibold"
             >
               + add
             </button>

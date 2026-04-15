@@ -79,13 +79,14 @@ export const getNextDaysEvents = (events: any[], days: number = 10) => {
 };
 
 // 음력 변환 함수
-import { Lunar } from 'lunar-calendar';
+const lunarCalendar = require('lunar-calendar');
 
 export const solarToLunar = (year: number, month: number, day: number): string => {
   try {
-    const lunar = Lunar.fromSolar(year, month, day);
-    if (lunar) {
-      return `음${lunar.lunarDay}`;
+    const lunarData = lunarCalendar.solarToLunar(year, month, day);
+    if (lunarData && lunarData.lunarDay) {
+      // 음력 날짜를 한글로 표시 (예: "음 28")
+      return `음 ${lunarData.lunarDay}`;
     }
   } catch (error) {
     console.error('Error converting to lunar date:', error);
