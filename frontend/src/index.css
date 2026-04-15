@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './styles/responsive.css';
+
+:root {
+  --color-pastel-50: #fafaf9;
+  --color-pastel-100: #f5f5f4;
+  --color-pastel-200: #e7e5e4;
+  --color-pastel-300: #d6d3d1;
+  --color-pastel-400: #a8a29e;
+  --color-pastel-500: #78716b;
+  --color-pastel-600: #57534e;
+  --color-pastel-700: #44403c;
+  --color-pastel-800: #292524;
+  --color-pastel-accent: #ffc0cb;
+  --color-pastel-orange: #ffa500;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-pastel-50);
+  color: var(--color-pastel-700);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 파스텔 톤 커스텀 스타일 */
+.pastel-bg {
+  background-color: var(--color-pastel-50);
+}
+
+.pastel-text {
+  color: var(--color-pastel-700);
+}
+
+.pastel-border {
+  border-color: var(--color-pastel-200);
+}
+
+/* 애니메이션 */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* 스크롤바 스타일 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-pastel-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-pastel-300 rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-pastel-400;
+}

@@ -1,0 +1,99 @@
+/* 모바일 반응형 스타일 */
+
+/* 모바일 (< 640px) */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
+  .calendar-day {
+    min-height: 80px;
+    padding: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .event-preview {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.25rem;
+  }
+
+  .header-title {
+    font-size: 1rem;
+  }
+
+  .event-display {
+    max-height: 200px;
+  }
+
+  /* 스택 레이아웃 */
+  .button-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  button {
+    font-size: 0.875rem;
+    padding: 0.5rem;
+  }
+}
+
+/* 태블릿 (640px ~ 1024px) */
+@media (min-width: 640px) and (max-width: 1024px) {
+  .calendar-day {
+    min-height: 100px;
+  }
+}
+
+/* 데스크톱 (> 1024px) */
+@media (min-width: 1024px) {
+  .calendar-day {
+    min-height: 120px;
+  }
+}
+
+/* 가로 모드 최적화 */
+@media (orientation: landscape) and (max-height: 600px) {
+  .calendar-grid {
+    gap: 0.1rem;
+  }
+
+  .calendar-day {
+    min-height: 60px;
+    padding: 0.15rem;
+  }
+
+  .event-display {
+    max-height: 150px;
+  }
+}
+
+/* 안전 영역 (노치/홈 버튼 고려) */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 다크 모드 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  img,
+  video {
+    filter: invert(1) hue-rotate(180deg);
+  }
+}

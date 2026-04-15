@@ -1,0 +1,41 @@
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+*.lock
+
+# Build outputs
+dist/
+build/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# 참고 이미지 파일 (Git에 올리지 않음)
+*.jpeg
+*.jpg
+*.png
+*.gif
+
+# Logs
+logs/
+*.log
+
+# OS
+Thumbs.db

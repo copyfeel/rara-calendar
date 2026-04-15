@@ -1,0 +1,57 @@
+/* Calendar specific styles */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.calendar-day {
+  min-height: 120px;
+  padding: 0.5rem;
+  border: 1px solid #e7e5e4;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.calendar-day:hover {
+  background-color: #f5f5f4;
+}
+
+.calendar-day.selected {
+  background-color: #d6d3d1;
+}
+
+.calendar-day.has-events {
+  background-color: #fafaf9;
+}
+
+.calendar-day.other-month {
+  background-color: #fafaf9;
+  color: #d6d3d1;
+}
+
+.calendar-date {
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.calendar-date.sunday {
+  color: #ef4444;
+}
+
+.event-preview {
+  background-color: #d6d3d1;
+  color: #44403c;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-count {
+  color: #78716b;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
