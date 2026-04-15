@@ -1,5 +1,15 @@
 /* App specific styles */
 
+/* iOS Safe Area - 하단 고정 바가 노치/홈 인디케이터를 가리지 않도록 */
+.safe-area-bottom {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* 전체 앱에 Safe Area 마진 적용 */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Modal animations */
 @keyframes modalFadeIn {
   from {

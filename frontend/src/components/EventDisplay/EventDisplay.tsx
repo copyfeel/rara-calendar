@@ -58,8 +58,8 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
         </div>
       )}
 
-      {/* 일정 리스트 */}
-      <div className="p-4 space-y-3 flex-1 overflow-y-auto">
+      {/* 일정 리스트 - 하단 고정 바 높이(56px)만큼 패딩 확보 */}
+      <div className="p-4 space-y-3 flex-1 overflow-y-auto pb-16">
         {selectedEvents.length === 0 ? (
           <div className="text-center text-pastel-400 py-6">
             <p>등록된 일정이 없습니다</p>
@@ -103,8 +103,8 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
         )}
       </div>
 
-      {/* 하단 컨트롤 바 */}
-      <div className="sticky bottom-0 bg-white border-t border-pastel-200 px-4 py-3">
+      {/* 하단 컨트롤 바 - 스크롤과 무관하게 화면 하단 고정 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-pastel-200 px-4 py-3 safe-area-bottom">
         <div className="flex items-center justify-between gap-2">
           <div className="flex gap-2">
             {/* 좌/우 이동 버튼 */}
