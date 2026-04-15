@@ -1,0 +1,24 @@
+{
+  "name": "rara-calendar",
+  "version": "1.0.0",
+  "description": "음력 표시와 투두 리스트를 포함한 개인 일정 관리 웹앱",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "lint": "cd frontend && npm run lint"
+  },
+  "keywords": [
+    "calendar",
+    "lunar",
+    "todo",
+    "react",
+    "vite"
+  ],
+  "author": "Rara Calendar",
+  "license": "MIT"
+}
