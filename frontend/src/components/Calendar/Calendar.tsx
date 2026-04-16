@@ -9,6 +9,23 @@ import {
 } from '../../utils/dateHelper';
 import './Calendar.css';
 
+// 카테고리별 배경색 반환
+const getCategoryBgColor = (category: string | null | undefined): string => {
+  if (!category) return '';
+  switch (category) {
+    case 'Work':
+      return 'bg-blue-100';
+    case 'Personal':
+      return 'bg-rose-100';
+    case 'Event':
+      return 'bg-orange-100';
+    case 'Other':
+      return 'bg-gray-100';
+    default:
+      return '';
+  }
+};
+
 interface CalendarProps {
   currentMonth: Date;
   onMonthChange?: (date: Date) => void;
@@ -80,6 +97,10 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
           const showLunar = day !== null && lunarDisplayDays.has(day);
           const lunarDate = showLunar ? solarToLunar(year, month, day!) : '';
 
+          // 카테고리 배경색 (첫 번째 이벤트 기준)
+          const firstEventCategory = dayEvents.length > 0 ? dayEvents[0].category : null;
+          const categoryBgColor = getCategoryBgColor(firstEventCategory);
+
           return (
             <div
               key={`${idx}-${day}`}
@@ -88,7 +109,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                 min-h-16 p-0 cursor-pointer transition-colors
                 ${!isCurrentMonth ? 'bg-pastel-50' : ''}
                 ${isSelected ? 'bg-pastel-400' : ''}
-                ${dayEvents.length > 0 && !isSelected && isCurrentMonth ? 'bg-pastel-100' : ''}
+                ${dayEvents.length > 0 && !isSelected && isCurrentMonth ? categoryBgColor || 'bg-pastel-100' : ''}
                 ${isTodayCell ? 'border border-pastel-accent' : ''}
                 hover:bg-pastel-100
               `}

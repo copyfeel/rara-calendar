@@ -147,7 +147,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
 
           {/* 시간 - useTime이 true일 때만 표시 */}
           {useTime && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-pastel-700 mb-1">
                   시작 시간
