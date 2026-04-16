@@ -157,7 +157,7 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
                       {event.title}
                     </div>
                     <div className="text-xs text-pastel-400 mt-0.5">
-                      {event.date},{getKoreanDayOfWeek(event.date)}
+                      {event.date} {getKoreanDayOfWeek(event.date)}
                     </div>
                   </div>
                 </div>

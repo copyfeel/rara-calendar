@@ -114,7 +114,7 @@ const SearchScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                       {event.title}
                     </div>
                     <div className="text-xs text-pastel-500">
-                      {event.date},{getKoreanDayOfWeek(event.date)}
+                      {event.date} {getKoreanDayOfWeek(event.date)}
                     </div>
                   </div>
                 </div>
