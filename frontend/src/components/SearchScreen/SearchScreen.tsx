@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
+import { getKoreanDayOfWeek } from '../../utils/dateHelper';
 
 const SearchScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { events, deleteEvent } = useEventStore();
@@ -113,7 +114,7 @@ const SearchScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                       {event.title}
                     </div>
                     <div className="text-xs text-pastel-500">
-                      {event.date} {event.startTime}
+                      {event.date},{getKoreanDayOfWeek(event.date)}
                     </div>
                   </div>
                 </div>
