@@ -4,6 +4,11 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  future: {
+    // hover: 클래스를 @media (hover: hover)로 감싸서
+    // 터치 기기(모바일)에서는 hover 효과가 발동하지 않도록 함
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
     extend: {
       colors: {

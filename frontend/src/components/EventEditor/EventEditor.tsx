@@ -145,9 +145,9 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
             </label>
           </div>
 
-          {/* 시간 - useTime이 true일 때만 표시 */}
+          {/* 시간 - useTime이 true일 때만 표시, 항상 1열(flex-col)로 카테고리/알람 폼과 동일 너비 */}
           {useTime && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-3">
               <div>
                 <label className="block text-sm font-medium text-pastel-700 mb-1">
                   시작 시간

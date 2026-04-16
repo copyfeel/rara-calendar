@@ -97,22 +97,29 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
           const showLunar = day !== null && lunarDisplayDays.has(day);
           const lunarDate = showLunar ? solarToLunar(year, month, day!) : '';
 
-          // 카테고리 배경색 (첫 번째 이벤트 기준)
-          const firstEventCategory = dayEvents.length > 0 ? dayEvents[0].category : null;
-          const categoryBgColor = getCategoryBgColor(firstEventCategory);
+          // 배경색을 하나의 함수로 결정 → 클래스 충돌 완전 방지
+          const getCellBgClass = (): string => {
+            if (isSelected) return 'bg-pastel-400';           // 선택: 가장 우선
+            if (!isCurrentMonth) return 'bg-pastel-50';       // 비현재월
+            if (dayEvents.length > 0) {
+              const cat = dayEvents[0].category;
+              return getCategoryBgColor(cat) || 'bg-pastel-100';
+            }
+            return '';                                         // 빈 날짜: 흰 배경
+          };
 
           return (
             <div
               key={`${idx}-${day}`}
               onClick={() => handleDateClick(day)}
-              className={`
-                min-h-16 p-0 cursor-pointer transition-colors
-                ${!isCurrentMonth ? 'bg-pastel-50' : ''}
-                ${isSelected ? 'bg-pastel-400' : ''}
-                ${dayEvents.length > 0 && !isSelected && isCurrentMonth ? categoryBgColor || 'bg-pastel-100' : ''}
-                ${isTodayCell ? 'border border-pastel-accent' : ''}
-                hover:bg-pastel-100
-              `}
+              className={[
+                'min-h-16 p-0 cursor-pointer transition-colors',
+                getCellBgClass(),
+                // hover: hoverOnlyWhenSupported 덕에 터치 기기에서는 발동 안 함
+                // 선택된 날짜는 hover 효과 제거
+                isSelected ? '' : 'hover:bg-pastel-100',
+                isTodayCell ? 'border border-pastel-accent' : '',
+              ].filter(Boolean).join(' ')}
             >
               {/* 칸 내부 */}
               <div className="p-1 h-full flex flex-col">
