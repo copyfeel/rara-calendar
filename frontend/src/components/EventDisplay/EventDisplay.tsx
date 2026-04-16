@@ -12,6 +12,10 @@ const getCategoryColor = (category: string): string => {
       return 'text-orange-600';
     case 'Other':
       return 'text-gray-600';
+    case '예주':
+      return 'text-pink-700';
+    case '마님':
+      return 'text-purple-600';
     default:
       return 'text-pastel-700';
   }

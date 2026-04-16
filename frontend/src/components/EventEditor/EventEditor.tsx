@@ -12,6 +12,10 @@ const getCategoryColor = (category: string): string => {
       return 'text-orange-600';
     case 'Other':
       return 'text-gray-600';
+    case '예주':
+      return 'text-pink-700';
+    case '마님':
+      return 'text-purple-600';
     default:
       return 'text-pastel-700';
   }
@@ -39,7 +43,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
   const [description, setDescription] = useState(editingEvent?.description || '');
   const [startTime, setStartTime] = useState(editingEvent?.startTime || '09:00');
   const [endTime, setEndTime] = useState(editingEvent?.endTime || '10:00');
-  const [category, setCategory] = useState<'Work' | 'Personal' | 'Event' | 'Other'>(
+  const [category, setCategory] = useState<'Work' | 'Personal' | 'Event' | 'Other' | '예주' | '마님'>(
     editingEvent?.category || 'Personal'
   );
   const [alarm, setAlarm] = useState(
@@ -190,7 +194,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
               <span className="text-sm font-medium text-pastel-700">카테고리 설정</span>
               {useCategory && (
                 <span className={`ml-auto text-xs font-semibold ${getCategoryColor(category)}`}>
-                  {{ Personal: '개인', Work: '일', Event: '행사', Other: '기타' }[category]}
+                  {{ Personal: '개인', Work: '일', Event: '행사', Other: '기타', '예주': '예주', '마님': '마님' }[category]}
                 </span>
               )}
             </label>
@@ -205,6 +209,8 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
                   <option value="Work">일</option>
                   <option value="Event">행사</option>
                   <option value="Other">기타</option>
+                  <option value="예주">예주</option>
+                  <option value="마님">마님</option>
                 </select>
               </div>
             )}

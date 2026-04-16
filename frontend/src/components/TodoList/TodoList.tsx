@@ -19,7 +19,7 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
   const [isDragging, setIsDragging] = useState(false); // 드래그 진행 중
   const dragStartY = useRef(0);                        // 드래그 시작 Y 위치
 
-  const upcomingEvents = getNextDaysEvents(events, 10);
+  const upcomingEvents = getNextDaysEvents(events, 30);
 
   // 마운트 후 슬라이드 업 시작
   useEffect(() => {
@@ -102,7 +102,7 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
       >
         {/* ── 헤더 + 드래그 핸들 (터치로 아래로 당겨 닫기) ── */}
         <div
-          className="flex-shrink-0 bg-white border-b border-pastel-100 px-4 py-3 flex items-center justify-between relative select-none"
+          className="sticky top-0 z-10 flex-shrink-0 bg-white border-b border-pastel-100 px-4 py-3 flex items-center justify-between relative select-none"
           style={{ cursor: 'grab', touchAction: 'none' }}
           onTouchStart={handleDragStart}
           onTouchMove={handleDragMove}
@@ -112,7 +112,7 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
           <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-pastel-300 rounded-full" />
 
           <h2 className="text-sm font-semibold text-pastel-700 mt-1">
-            오늘부터 10일 일정
+            오늘부터 30일 일정
           </h2>
 
           {/* ❶ X 버튼으로 닫기 */}

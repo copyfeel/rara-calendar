@@ -21,6 +21,10 @@ const getCategoryBgColor = (category: string | null | undefined): string => {
       return 'bg-orange-100';
     case 'Other':
       return 'bg-gray-100';
+    case '예주':
+      return 'bg-pink-100';
+    case '마님':
+      return 'bg-purple-100';
     default:
       return '';
   }
