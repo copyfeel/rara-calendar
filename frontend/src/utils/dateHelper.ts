@@ -142,3 +142,10 @@ export const isSundayDate = (dateStr: string | null): boolean => {
   if (!dateStr) return false;
   return dayjs(dateStr).day() === 0;
 };
+
+// 날짜 문자열로부터 한글 요일 반환
+export const getKoreanDayOfWeek = (dateStr: string): string => {
+  const koreanDays = ['일', '월', '화', '수', '목', '금', '토'];
+  const dayIndex = dayjs(dateStr).day();
+  return koreanDays[dayIndex];
+};

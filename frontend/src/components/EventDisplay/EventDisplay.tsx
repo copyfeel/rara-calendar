@@ -2,12 +2,28 @@ import { useEventStore } from '../../store/eventStore';
 import { getTodayDate, getRelativeDateString } from '../../utils/dateHelper';
 import type { Event } from '../../types/event';
 
+const getCategoryColor = (category: string): string => {
+  switch (category) {
+    case 'Work':
+      return 'text-blue-600';
+    case 'Personal':
+      return 'text-rose-600';
+    case 'Event':
+      return 'text-orange-600';
+    case 'Other':
+      return 'text-gray-600';
+    default:
+      return 'text-pastel-700';
+  }
+};
+
 interface EventDisplayProps {
   onOpenEventEditor: (event?: Event) => void;
   onOpenTodoList?: () => void;
+  onMonthChange?: (date: Date) => void;
 }
 
-const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTodoList }) => {
+const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTodoList, onMonthChange }) => {
   const { events, selectedDate, setSelectedDate, deleteEvent } = useEventStore();
   const today = getTodayDate();
 
@@ -36,6 +52,11 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
 
   const handleToday = () => {
     setSelectedDate(today);
+    // 오늘 날짜로 월 변경
+    if (onMonthChange) {
+      const todayDate = new Date(today);
+      onMonthChange(todayDate);
+    }
   };
 
   const handleDeleteEvent = (eventId: string) => {
@@ -51,9 +72,9 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
     <div className="bg-pastel-50 border-t-2 border-pastel-200 flex flex-col flex-1">
       {/* 날짜 표시 - "~일 후" 부분만 표시 */}
       {!isToday && relativeDate && (
-        <div className="px-4 py-2 bg-white border-b border-pastel-200 text-center">
-          <span className="text-sm text-pastel-orange font-semibold">
-            {relativeDate}
+        <div className="px-4 py-2 bg-white border-b border-pastel-200 text-left">
+          <span className="text-sm text-pastel-600 font-semibold">
+            + {relativeDate}
           </span>
         </div>
       )}
@@ -73,10 +94,12 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
             >
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1">
-                  <div className="font-semibold text-pastel-700">{event.title}</div>
-                  <div className="text-xs text-pastel-500 mt-1">
-                    {event.startTime} ~ {event.endTime}
-                  </div>
+                  <div className={`font-semibold ${getCategoryColor(event.category)}`}>{event.title}</div>
+                  {event.useTime && (
+                    <div className="text-xs text-pastel-500 mt-1">
+                      {event.startTime} ~ {event.endTime}
+                    </div>
+                  )}
                   {event.description && (
                     <div className="text-xs text-pastel-600 mt-2">{event.description}</div>
                   )}

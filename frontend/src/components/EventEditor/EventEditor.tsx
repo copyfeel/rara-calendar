@@ -2,10 +2,36 @@ import { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import type { Event } from '../../types/event';
 
+const getCategoryColor = (category: string): string => {
+  switch (category) {
+    case 'Work':
+      return 'text-blue-600';
+    case 'Personal':
+      return 'text-rose-600';
+    case 'Event':
+      return 'text-orange-600';
+    case 'Other':
+      return 'text-gray-600';
+    default:
+      return 'text-pastel-700';
+  }
+};
+
 interface EventEditorProps {
   onClose: () => void;
   editingEvent?: Event;
 }
+
+const ALARM_OPTIONS = [
+  { label: '1주일 전', value: 7 * 24 * 60 },
+  { label: '3일 전', value: 3 * 24 * 60 },
+  { label: '2일 전', value: 2 * 24 * 60 },
+  { label: '1일 전', value: 24 * 60 },
+  { label: '3시간 전', value: 3 * 60 },
+  { label: '2시간 전', value: 2 * 60 },
+  { label: '1시간 전', value: 60 },
+  { label: '30분 전', value: 30 },
+];
 
 const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
   const { addEvent, updateEvent, selectedDate } = useEventStore();
@@ -17,6 +43,8 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
     editingEvent?.category || 'Personal'
   );
   const [alarm, setAlarm] = useState(editingEvent?.alarm || 15);
+  const [alarmEnabled, setAlarmEnabled] = useState(editingEvent?.alarmEnabled !== false);
+  const [useTime, setUseTime] = useState(editingEvent?.useTime !== false);
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -28,20 +56,24 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
       updateEvent(editingEvent.id, {
         title,
         description,
-        startTime,
-        endTime,
+        startTime: useTime ? startTime : '00:00',
+        endTime: useTime ? endTime : '00:00',
         category,
-        alarm,
+        alarm: alarmEnabled ? alarm : 0,
+        alarmEnabled,
+        useTime,
       });
     } else {
       addEvent({
         title,
         description,
         date: selectedDate,
-        startTime,
-        endTime,
+        startTime: useTime ? startTime : '00:00',
+        endTime: useTime ? endTime : '00:00',
         category,
-        alarm,
+        alarm: alarmEnabled ? alarm : 0,
+        alarmEnabled,
+        useTime,
       });
     }
 
@@ -68,11 +100,14 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
 
         {/* 입력 폼 */}
         <div className="p-4 space-y-4">
-          {/* 제목 */}
+          {/* 제목 - 카테고리 색상 미리보기 */}
           <div>
             <label className="block text-sm font-medium text-pastel-700 mb-1">
               제목
             </label>
+            <div className={`text-sm font-semibold mb-2 ${getCategoryColor(category)}`}>
+              {title || '미리보기'}
+            </div>
             <input
               type="text"
               value={title}
@@ -96,31 +131,47 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
             />
           </div>
 
-          {/* 시간 */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-pastel-700 mb-1">
-                시작 시간
-              </label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-pastel-700 mb-1">
-                종료 시간
-              </label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
-              />
-            </div>
+          {/* 시간 입력 체크박스 */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="useTime"
+              checked={useTime}
+              onChange={(e) => setUseTime(e.target.checked)}
+              className="w-4 h-4 rounded accent-pastel-400 cursor-pointer"
+            />
+            <label htmlFor="useTime" className="text-sm font-medium text-pastel-700 cursor-pointer">
+              시간 설정
+            </label>
           </div>
+
+          {/* 시간 - useTime이 true일 때만 표시 */}
+          {useTime && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-pastel-700 mb-1">
+                  시작 시간
+                </label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-pastel-700 mb-1">
+                  종료 시간
+                </label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
+                />
+              </div>
+            </div>
+          )}
 
           {/* 카테고리 */}
           <div>
@@ -139,21 +190,39 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
             </select>
           </div>
 
-          {/* 알람 */}
-          <div>
-            <label className="block text-sm font-medium text-pastel-700 mb-1">
-              알람 ({alarm}분 전)
-            </label>
+          {/* 알람 체크박스 */}
+          <div className="flex items-center gap-2">
             <input
-              type="range"
-              min="0"
-              max="60"
-              step="5"
-              value={alarm}
-              onChange={(e) => setAlarm(parseInt(e.target.value))}
-              className="w-full"
+              type="checkbox"
+              id="alarmEnabled"
+              checked={alarmEnabled}
+              onChange={(e) => setAlarmEnabled(e.target.checked)}
+              className="w-4 h-4 rounded accent-pastel-400 cursor-pointer"
             />
+            <label htmlFor="alarmEnabled" className="text-sm font-medium text-pastel-700 cursor-pointer">
+              알람 설정
+            </label>
           </div>
+
+          {/* 알람 옵션 - alarmEnabled가 true일 때만 표시 */}
+          {alarmEnabled && (
+            <div>
+              <label className="block text-sm font-medium text-pastel-700 mb-1">
+                알람 시간
+              </label>
+              <select
+                value={alarm}
+                onChange={(e) => setAlarm(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
+              >
+                {ALARM_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* 버튼 */}
           <div className="flex gap-3 pt-4 border-t border-pastel-200">

@@ -87,7 +87,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
               className={`
                 min-h-16 p-0 cursor-pointer transition-colors
                 ${!isCurrentMonth ? 'bg-pastel-50' : ''}
-                ${isSelected ? 'bg-pastel-200' : ''}
+                ${isSelected ? 'bg-pastel-400' : ''}
                 ${dayEvents.length > 0 && !isSelected && isCurrentMonth ? 'bg-pastel-100' : ''}
                 ${isTodayCell ? 'border border-pastel-accent' : ''}
                 hover:bg-pastel-100
@@ -100,7 +100,9 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                   {/* ✅ 날짜 크기 50% 키움: text-xs → text-sm */}
                   <span
                     className={`font-bold text-sm leading-none ${
-                      isSunday && isCurrentMonth
+                      isSelected
+                        ? 'text-white'
+                        : isSunday && isCurrentMonth
                         ? 'text-red-500'
                         : isCurrentMonth
                         ? 'text-pastel-700'
@@ -109,10 +111,10 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                   >
                     {day}
                   </span>
-                  {/* ✅ 음력 크기 30% 줄임: text-xs(12px) → 8px, 연한 그레이 */}
+                  {/* ✅ 음력 크기 30% 줄임: text-xs(12px) → 8px, 진한 그레이 */}
                   {lunarDate && (
                     <span
-                      className="font-light text-pastel-300 leading-none"
+                      className="font-normal text-pastel-600 leading-none"
                       style={{ fontSize: '8px' }}
                     >
                       {lunarDate}

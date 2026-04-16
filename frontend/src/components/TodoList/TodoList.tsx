@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useEventStore } from '../../store/eventStore';
-import { getNextDaysEvents } from '../../utils/dateHelper';
+import { getNextDaysEvents, getKoreanDayOfWeek } from '../../utils/dateHelper';
 
 interface TodoListProps {
   onClose: () => void;
@@ -157,8 +157,7 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
                       {event.title}
                     </div>
                     <div className="text-xs text-pastel-400 mt-0.5">
-                      {event.date}
-                      {event.startTime ? ` · ${event.startTime}` : ''}
+                      {event.date} ({getKoreanDayOfWeek(event.date)})
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 import { useEventStore } from '../../store/eventStore';
+import { useEffect, useRef } from 'react';
 
 interface HeaderProps {
   onOpenSearch: () => void;
@@ -9,6 +10,28 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth, onMonthChange }) => {
   useEventStore();
+  const headerRef = useRef<HTMLElement>(null);
+
+  // 모바일 환경에서 헤더 위치를 원위치로 복구
+  useEffect(() => {
+    const handleRestoreHeaderPosition = () => {
+      if (headerRef.current) {
+        // 헤더를 항상 상단에 유지
+        headerRef.current.scrollIntoView({ block: 'start' });
+      }
+    };
+
+    // 윈도우 리사이즈, 방향 전환, 스크롤 시 헤더 위치 복구
+    window.addEventListener('resize', handleRestoreHeaderPosition);
+    window.addEventListener('orientationchange', handleRestoreHeaderPosition);
+    window.addEventListener('scroll', handleRestoreHeaderPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', handleRestoreHeaderPosition);
+      window.removeEventListener('orientationchange', handleRestoreHeaderPosition);
+      window.removeEventListener('scroll', handleRestoreHeaderPosition, true);
+    };
+  }, []);
 
   const handlePrevMonth = () => {
     const newDate = new Date(currentMonth);
@@ -28,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth
   const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
   return (
-    <header className="bg-white border-b border-pastel-200 sticky top-0 z-50 shadow-sm">
+    <header ref={headerRef} className="bg-white border-b border-pastel-200 sticky top-0 z-50 shadow-sm">
       {/* 상단 메뉴바 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-pastel-200">
         {/* 검색 아이콘 */}

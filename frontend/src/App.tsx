@@ -87,6 +87,7 @@ function App() {
             setShowEventEditor(true);
           }}
           onOpenTodoList={() => setShowTodoList(true)}
+          onMonthChange={setCurrentMonth}
         />
       </main>
 
