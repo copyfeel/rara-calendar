@@ -42,9 +42,21 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
   const [category, setCategory] = useState<'Work' | 'Personal' | 'Event' | 'Other'>(
     editingEvent?.category || 'Personal'
   );
-  const [alarm, setAlarm] = useState(editingEvent?.alarm || 15);
-  const [alarmEnabled, setAlarmEnabled] = useState(editingEvent?.alarmEnabled !== false);
-  const [useTime, setUseTime] = useState(editingEvent?.useTime !== false);
+  const [alarm, setAlarm] = useState(
+    editingEvent?.alarm && editingEvent.alarm !== 0
+      ? editingEvent.alarm
+      : 30  // 기본값: 30분 전
+  );
+  // 새 일정이면 기본 꺼짐(false), 수정이면 저장된 상태 복원
+  const [useTime, setUseTime] = useState(
+    editingEvent ? (editingEvent.useTime === true) : false
+  );
+  const [useCategory, setUseCategory] = useState(
+    editingEvent ? true : false
+  );
+  const [alarmEnabled, setAlarmEnabled] = useState(
+    editingEvent ? (editingEvent.alarmEnabled === true) : false
+  );
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -52,29 +64,22 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
       return;
     }
 
+    const eventData = {
+      title,
+      description,
+      startTime: useTime ? startTime : '',
+      endTime:   useTime ? endTime   : '',
+      category:  useCategory ? category : 'Personal' as const,
+      alarm:     alarmEnabled ? alarm : 0,
+      alarmEnabled,
+      useTime,
+      useCategory,
+    };
+
     if (editingEvent) {
-      updateEvent(editingEvent.id, {
-        title,
-        description,
-        startTime: useTime ? startTime : '00:00',
-        endTime: useTime ? endTime : '00:00',
-        category,
-        alarm: alarmEnabled ? alarm : 0,
-        alarmEnabled,
-        useTime,
-      });
+      updateEvent(editingEvent.id, eventData);
     } else {
-      addEvent({
-        title,
-        description,
-        date: selectedDate,
-        startTime: useTime ? startTime : '00:00',
-        endTime: useTime ? endTime : '00:00',
-        category,
-        alarm: alarmEnabled ? alarm : 0,
-        alarmEnabled,
-        useTime,
-      });
+      addEvent({ ...eventData, date: selectedDate });
     }
 
     onClose();
@@ -131,98 +136,112 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
             />
           </div>
 
-          {/* 시간 입력 체크박스 */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="useTime"
-              checked={useTime}
-              onChange={(e) => setUseTime(e.target.checked)}
-              className="w-4 h-4 rounded accent-pastel-400 cursor-pointer"
-            />
-            <label htmlFor="useTime" className="text-sm font-medium text-pastel-700 cursor-pointer">
-              시간 설정
+          {/* ── 시간 설정 ─────────────────────────── */}
+          <div className="border border-pastel-200 rounded-lg overflow-hidden">
+            {/* 체크박스 헤더 */}
+            <label className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-pastel-50 transition select-none">
+              <input
+                type="checkbox"
+                checked={useTime}
+                onChange={(e) => setUseTime(e.target.checked)}
+                className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
+              />
+              <span className="text-sm font-medium text-pastel-700">시간 설정</span>
+              {useTime && startTime && (
+                <span className="ml-auto text-xs text-pastel-500">
+                  {startTime} ~ {endTime}
+                </span>
+              )}
             </label>
-          </div>
-
-          {/* 시간 - useTime이 true일 때만 표시, 항상 1열(flex-col)로 카테고리/알람 폼과 동일 너비 */}
-          {useTime && (
-            <div className="flex flex-col gap-3">
-              <div>
-                <label className="block text-sm font-medium text-pastel-700 mb-1">
-                  시작 시간
-                </label>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
-                />
+            {/* 펼쳐지는 내용 */}
+            {useTime && (
+              <div className="px-4 pb-4 pt-1 flex flex-col gap-3 border-t border-pastel-100 bg-pastel-50">
+                <div>
+                  <label className="block text-xs font-medium text-pastel-600 mb-1">시작 시간</label>
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-pastel-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pastel-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-pastel-600 mb-1">종료 시간</label>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-pastel-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pastel-400"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-pastel-700 mb-1">
-                  종료 시간
-                </label>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
-                />
+            )}
+          </div>
+
+          {/* ── 카테고리 설정 ────────────────────── */}
+          <div className="border border-pastel-200 rounded-lg overflow-hidden">
+            <label className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-pastel-50 transition select-none">
+              <input
+                type="checkbox"
+                checked={useCategory}
+                onChange={(e) => setUseCategory(e.target.checked)}
+                className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
+              />
+              <span className="text-sm font-medium text-pastel-700">카테고리 설정</span>
+              {useCategory && (
+                <span className={`ml-auto text-xs font-semibold ${getCategoryColor(category)}`}>
+                  {{ Personal: '개인', Work: '일', Event: '행사', Other: '기타' }[category]}
+                </span>
+              )}
+            </label>
+            {useCategory && (
+              <div className="px-4 pb-4 pt-1 border-t border-pastel-100 bg-pastel-50">
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as typeof category)}
+                  className="w-full px-3 py-2 bg-white border border-pastel-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pastel-400"
+                >
+                  <option value="Personal">개인</option>
+                  <option value="Work">일</option>
+                  <option value="Event">행사</option>
+                  <option value="Other">기타</option>
+                </select>
               </div>
-            </div>
-          )}
-
-          {/* 카테고리 */}
-          <div>
-            <label className="block text-sm font-medium text-pastel-700 mb-1">
-              카테고리
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as any)}
-              className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
-            >
-              <option value="Personal">개인</option>
-              <option value="Work">일</option>
-              <option value="Event">행사</option>
-              <option value="Other">기타</option>
-            </select>
+            )}
           </div>
 
-          {/* 알람 체크박스 */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="alarmEnabled"
-              checked={alarmEnabled}
-              onChange={(e) => setAlarmEnabled(e.target.checked)}
-              className="w-4 h-4 rounded accent-pastel-400 cursor-pointer"
-            />
-            <label htmlFor="alarmEnabled" className="text-sm font-medium text-pastel-700 cursor-pointer">
-              알람 설정
+          {/* ── 알람 설정 ────────────────────────── */}
+          <div className="border border-pastel-200 rounded-lg overflow-hidden">
+            <label className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-pastel-50 transition select-none">
+              <input
+                type="checkbox"
+                checked={alarmEnabled}
+                onChange={(e) => setAlarmEnabled(e.target.checked)}
+                className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
+              />
+              <span className="text-sm font-medium text-pastel-700">알람 설정</span>
+              {alarmEnabled && (
+                <span className="ml-auto text-xs text-pastel-500">
+                  {ALARM_OPTIONS.find(o => o.value === alarm)?.label ?? ''}
+                </span>
+              )}
             </label>
+            {alarmEnabled && (
+              <div className="px-4 pb-4 pt-1 border-t border-pastel-100 bg-pastel-50">
+                <select
+                  value={alarm}
+                  onChange={(e) => setAlarm(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 bg-white border border-pastel-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pastel-400"
+                >
+                  {ALARM_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-
-          {/* 알람 옵션 - alarmEnabled가 true일 때만 표시 */}
-          {alarmEnabled && (
-            <div>
-              <label className="block text-sm font-medium text-pastel-700 mb-1">
-                알람 시간
-              </label>
-              <select
-                value={alarm}
-                onChange={(e) => setAlarm(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
-              >
-                {ALARM_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* 버튼 */}
           <div className="flex gap-3 pt-4 border-t border-pastel-200">

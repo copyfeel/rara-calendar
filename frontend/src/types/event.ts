@@ -7,8 +7,9 @@ export interface Event {
   endTime: string; // HH:mm
   category: 'Work' | 'Personal' | 'Event' | 'Other';
   alarm: number; // 분 단위
-  alarmEnabled?: boolean; // 알람 활성화 여부
-  useTime?: boolean; // 시간 입력 여부
+  alarmEnabled?: boolean;  // 알람 활성화 여부
+  useTime?: boolean;       // 시간 입력 여부
+  useCategory?: boolean;   // 카테고리 설정 여부
   isAllDay?: boolean;
   createdAt: string;
   updatedAt: string;
