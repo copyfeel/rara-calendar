@@ -48,6 +48,22 @@ function App() {
   // 알람 기능 활성화
   useNotification();
 
+  // 모달 활성화 시 메인화면 scroll 고정 (TodoList, SearchScreen, EventEditor, AdminPanel)
+  useEffect(() => {
+    if (showTodoList || showSearchScreen || showEventEditor || showAdminPanel) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [showTodoList, showSearchScreen, showEventEditor, showAdminPanel]);
+
   useEffect(() => {
     loadFromStorage();
   }, [loadFromStorage]);
@@ -76,7 +92,7 @@ function App() {
         currentMonth={currentMonth}
         onMonthChange={setCurrentMonth}
       />
-      <main className="flex-1 overflow-auto flex flex-col">
+      <main className="flex-1 flex flex-col overflow-hidden">
         {/* calendarRef로 캘린더 하단 위치 측정 */}
         <div ref={calendarRef}>
           <Calendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
