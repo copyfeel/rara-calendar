@@ -83,10 +83,9 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
 
   return (
     <>
-      {/* 반투명 오버레이 – 캘린더 아래만, 클릭하면 닫힘 */}
+      {/* 반투명 오버레이 – 전체 화면, 클릭하면 닫힘 */}
       <div
         className="todo-overlay fixed inset-0 bg-black/20 z-40"
-        style={{ top: `${calendarBottom}px` }}
         onClick={handleClose}
       />
 
