@@ -87,8 +87,14 @@ function App() {
   return (
     <div className="w-full min-h-screen bg-pastel-50 flex flex-col">
       <Header
-        onOpenSearch={() => setShowSearchScreen(true)}
-        onOpenAdmin={() => setShowAdminPanel(true)}
+        onOpenSearch={() => {
+          setShowTodoList(false);
+          setShowSearchScreen(true);
+        }}
+        onOpenAdmin={() => {
+          setShowTodoList(false);
+          setShowAdminPanel(true);
+        }}
         currentMonth={currentMonth}
         onMonthChange={setCurrentMonth}
       />
@@ -99,6 +105,7 @@ function App() {
         </div>
         <EventDisplay
           onOpenEventEditor={(event) => {
+            setShowTodoList(false);
             setEditingEvent(event);
             setShowEventEditor(true);
           }}
