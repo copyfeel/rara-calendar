@@ -79,16 +79,16 @@ export const getNextDaysEvents = (events: any[], days: number = 10) => {
   }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
-// 음력 변환 함수
-const lunarCalendar = require('lunar-calendar');
+// 음력 변환 함수 (KoreanLunarCalendar - 99% 정확도)
+import KoreanLunarCalendar from 'korean-lunar-calendar';
 
 export const solarToLunar = (year: number, month: number, day: number): string => {
   try {
-    const lunarData = lunarCalendar.solarToLunar(year, month, day);
-    if (lunarData && lunarData.lunarMonth && lunarData.lunarDay) {
-      // '음월.일' 형식: 예) 음2.28
-      return `음${lunarData.lunarMonth}.${lunarData.lunarDay}`;
-    }
+    const calendar = new KoreanLunarCalendar();
+    calendar.setSolarDate(year, month, day);
+    const lunar = calendar.getLunarCalendar();
+    const monthStr = lunar.intercalation ? `윤${lunar.month}` : `음${lunar.month}`;
+    return `${monthStr}.${lunar.day}`;
   } catch (error) {
     console.error('Error converting to lunar date:', error);
   }
