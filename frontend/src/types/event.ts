@@ -5,7 +5,7 @@ export interface Event {
   date: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm
-  category: 'Work' | 'Personal' | 'Event' | 'Other' | '예주' | '마님';
+  category: '업무' | '카피' | 'Event' | '가족' | '예주' | '마님';
   alarm: number; // 분 단위
   alarmEnabled?: boolean;  // 알람 활성화 여부
   useTime?: boolean;       // 시간 입력 여부

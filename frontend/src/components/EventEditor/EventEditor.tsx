@@ -4,18 +4,18 @@ import type { Event } from '../../types/event';
 
 const getCategoryColor = (category: string): string => {
   switch (category) {
-    case 'Work':
-      return 'text-blue-600';
-    case 'Personal':
-      return 'text-rose-600';
+    case '업무':
+      return 'text-green-600';
+    case '카피':
+      return 'text-yellow-600';
     case 'Event':
       return 'text-orange-600';
-    case 'Other':
-      return 'text-gray-600';
+    case '가족':
+      return 'text-amber-700';
     case '예주':
       return 'text-pink-700';
     case '마님':
-      return 'text-purple-600';
+      return 'text-red-600';
     default:
       return 'text-pastel-700';
   }
@@ -50,8 +50,8 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
   const [description, setDescription] = useState(editingEvent?.description || '');
   const [startTime, setStartTime] = useState(editingEvent?.startTime || '09:00');
   const [endTime, setEndTime] = useState(editingEvent?.endTime || '10:00');
-  const [category, setCategory] = useState<'Work' | 'Personal' | 'Event' | 'Other' | '예주' | '마님'>(
-    editingEvent?.category || 'Personal'
+  const [category, setCategory] = useState<'업무' | '카피' | 'Event' | '가족' | '예주' | '마님'>(
+    editingEvent?.category || '카피'
   );
   const [alarm, setAlarm] = useState(
     editingEvent?.alarm && editingEvent.alarm !== 0
@@ -110,7 +110,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
       description,
       startTime: useTime ? startTime : '',
       endTime:   useTime ? endTime   : '',
-      category:  useCategory ? category : 'Personal' as const,
+      category:  useCategory ? category : '카피' as const,
       alarm:     alarmEnabled ? alarm : 0,
       alarmEnabled,
       useTime,
@@ -259,7 +259,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
               <span className="text-sm font-medium text-pastel-700">카테고리 설정</span>
               {useCategory && (
                 <span className={`ml-auto text-xs font-semibold ${getCategoryColor(category)}`}>
-                  {{ Personal: '개인', Work: '일', Event: '행사', Other: '기타', '예주': '예주', '마님': '마님' }[category]}
+                  {{ 카피: '카피', 업무: '업무', Event: '행사', 가족: '가족', '예주': '예주', '마님': '마님' }[category]}
                 </span>
               )}
             </label>
@@ -270,10 +270,10 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
                   onChange={(e) => setCategory(e.target.value as typeof category)}
                   className="w-full px-3 py-2 bg-white border border-pastel-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pastel-400"
                 >
-                  <option value="Personal">개인</option>
-                  <option value="Work">일</option>
+                  <option value="카피">카피</option>
+                  <option value="업무">업무</option>
                   <option value="Event">행사</option>
-                  <option value="Other">기타</option>
+                  <option value="가족">가족</option>
                   <option value="예주">예주</option>
                   <option value="마님">마님</option>
                 </select>

@@ -13,18 +13,18 @@ import './Calendar.css';
 const getCategoryBgColor = (category: string | null | undefined): string => {
   if (!category) return '';
   switch (category) {
-    case 'Work':
-      return 'bg-blue-100';
-    case 'Personal':
-      return 'bg-rose-100';
+    case '업무':
+      return 'bg-green-100';
+    case '카피':
+      return 'bg-yellow-100';
     case 'Event':
       return 'bg-orange-100';
-    case 'Other':
-      return 'bg-gray-100';
+    case '가족':
+      return 'bg-amber-100';
     case '예주':
       return 'bg-pink-100';
     case '마님':
-      return 'bg-purple-100';
+      return 'bg-red-100';
     default:
       return '';
   }

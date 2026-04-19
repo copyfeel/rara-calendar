@@ -4,18 +4,18 @@ import type { Event } from '../../types/event';
 
 const getCategoryColor = (category: string): string => {
   switch (category) {
-    case 'Work':
-      return 'text-blue-600';
-    case 'Personal':
-      return 'text-rose-600';
+    case '업무':
+      return 'text-green-600';
+    case '카피':
+      return 'text-yellow-600';
     case 'Event':
       return 'text-orange-600';
-    case 'Other':
-      return 'text-gray-600';
+    case '가족':
+      return 'text-amber-700';
     case '예주':
       return 'text-pink-700';
     case '마님':
-      return 'text-purple-600';
+      return 'text-red-600';
     default:
       return 'text-pastel-700';
   }

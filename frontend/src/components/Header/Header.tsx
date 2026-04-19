@@ -67,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth
     <header ref={headerRef} className="bg-white border-b border-pastel-200 sticky top-0 z-50 shadow-sm">
       {/* 상단 메뉴바 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-pastel-200">
-        {/* 검색 아이콘 */}
+        {/* 검색 아이콘 (좌측) */}
         <button
           onClick={onOpenSearch}
           className="p-2 hover:bg-pastel-100 rounded-lg transition"
@@ -78,8 +78,8 @@ const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth
           </svg>
         </button>
 
-        {/* 연/월 표시 - PC에서만 버튼 표시 */}
-        <div className="flex items-center gap-2">
+        {/* 연/월 표시 (중앙) */}
+        <div className="flex-1 flex items-center justify-center gap-2">
           <button
             onClick={handlePrevMonth}
             className="p-2 hover:bg-pastel-100 rounded-lg transition hidden sm:block"
@@ -90,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth
             </svg>
           </button>
 
-          <span className="text-lg font-semibold text-pastel-700 min-w-[100px] text-center">
+          <span className="text-lg font-semibold text-pastel-700 min-w-[120px] text-center">
             {year}년 {month}월
           </span>
 
@@ -105,28 +105,31 @@ const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth
           </button>
         </div>
 
-        {/* 관리자 아이콘 - 심플한 스타일로 변경 */}
-        <button
-          onClick={onOpenAdmin}
-          className="p-2 hover:bg-pastel-100 rounded-lg transition"
-          title="설정"
-        >
-          <svg className="w-6 h-6 text-pastel-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-          </svg>
-        </button>
+        {/* 관리자 + 로그아웃 버튼 (우측 나란히) */}
+        <div className="flex items-center gap-2">
+          {/* 관리자 아이콘 */}
+          <button
+            onClick={onOpenAdmin}
+            className="p-2 hover:bg-pastel-100 rounded-lg transition"
+            title="설정"
+          >
+            <svg className="w-6 h-6 text-pastel-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+          </button>
 
-        {/* 로그아웃 버튼 */}
-        <button
-          onClick={handleSignOut}
-          disabled={isSigningOut}
-          className="p-2 hover:bg-pastel-100 rounded-lg transition disabled:opacity-50"
-          title="로그아웃"
-        >
-          <svg className="w-6 h-6 text-pastel-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-        </button>
+          {/* 로그아웃 버튼 */}
+          <button
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="p-2 hover:bg-pastel-100 rounded-lg transition disabled:opacity-50"
+            title="로그아웃"
+          >
+            <svg className="w-6 h-6 text-pastel-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* 요일 표시 - 높이와 글자 크기 40% 축소 */}
