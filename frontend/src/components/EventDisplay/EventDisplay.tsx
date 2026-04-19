@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { getTodayDate, getRelativeDateString } from '../../utils/dateHelper';
 import type { Event } from '../../types/event';
@@ -33,35 +33,42 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
   const { events, selectedDate, setSelectedDate, deleteEvent } = useEventStore();
   const today = getTodayDate();
   const [hideBottomBar, setHideBottomBar] = useState(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+  // 모바일 전용: 스크롤 감지 → 하단 바 자동 숨김/표시
+  useEffect(() => {
     if (isPC) return;
 
-    const target = e.currentTarget;
-    const hasScroll = target.scrollHeight > target.clientHeight;
+    const el = scrollContainerRef.current;
+    if (!el) return;
 
-    if (hasScroll) {
-      setHideBottomBar(true);
+    const onScroll = () => {
+      const scrollTop = el.scrollTop;
 
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
+      if (scrollTop > 20) {
+        setHideBottomBar(true);
+      } else {
+        // 최상단으로 돌아오면 즉시 표시
+        setHideBottomBar(false);
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        return;
       }
 
+      // 스크롤 멈추면 800ms 후 표시
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       scrollTimeoutRef.current = setTimeout(() => {
         setHideBottomBar(false);
-      }, 1000);
-    }
-  }, [isPC]);
-
-  useEffect(() => {
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+      }, 800);
     };
-  }, []);
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, [isPC]);
 
   const selectedEvents = events.filter(event => event.date === selectedDate);
   const previousEventDate = events
@@ -88,7 +95,6 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
 
   const handleToday = () => {
     setSelectedDate(today);
-    // 오늘 날짜로 월 변경
     if (onMonthChange) {
       const todayDate = new Date(today);
       onMonthChange(todayDate);
@@ -115,70 +121,73 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
         </div>
       )}
 
-      {/* 일정 리스트 - 스크롤 가능, 하단 바 아래 지정 */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden" onScroll={handleScroll}>
-        <div className="p-4 space-y-3 pb-20">
-        {selectedEvents.length === 0 ? (
-          <div className="text-center text-pastel-400 py-6">
-            <p>등록된 일정이 없습니다</p>
-          </div>
-        ) : (
-          selectedEvents.map(event => (
-            <div
-              key={event.id}
-              className="bg-white p-3 rounded-lg border border-pastel-200 hover:shadow-md transition cursor-pointer"
-              onClick={() => onOpenEventEditor(event)}
-            >
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex-1">
-                  <div className={`font-semibold ${getCategoryColor(event.category)}`}>{event.title}</div>
-                  {event.useTime && (
-                    <div className="text-xs text-pastel-500 mt-1">
-                      {event.startTime} ~ {event.endTime}
-                    </div>
-                  )}
-                  {event.description && (
-                    <div className="text-xs text-pastel-600 mt-2">{event.description}</div>
-                  )}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteEvent(event.id);
-                  }}
-                  className="p-1 hover:bg-red-100 rounded transition"
-                  title="삭제"
-                >
-                  <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </div>
+      {/* 일정 리스트 - 스크롤 가능 */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        style={{ touchAction: 'pan-y' }}
+      >
+        <div className="p-4 space-y-3 pb-24">
+          {selectedEvents.length === 0 ? (
+            <div className="text-center text-pastel-400 py-6">
+              <p>등록된 일정이 없습니다</p>
             </div>
-          ))
-        )}
+          ) : (
+            selectedEvents.map(event => (
+              <div
+                key={event.id}
+                className="bg-white p-3 rounded-lg border border-pastel-200 hover:shadow-md transition cursor-pointer"
+                onClick={() => onOpenEventEditor(event)}
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1">
+                    <div className={`font-semibold ${getCategoryColor(event.category)}`}>{event.title}</div>
+                    {event.useTime && (
+                      <div className="text-xs text-pastel-500 mt-1">
+                        {event.startTime} ~ {event.endTime}
+                      </div>
+                    )}
+                    {event.description && (
+                      <div className="text-xs text-pastel-600 mt-2">{event.description}</div>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteEvent(event.id);
+                    }}
+                    className="p-1 hover:bg-red-100 rounded transition"
+                    title="삭제"
+                  >
+                    <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
-      {/* 하단 컨트롤 바 - 스크롤과 무관하게 화면 하단 고정 */}
+      {/* 하단 컨트롤 바 */}
       <div
         className="fixed bottom-0 z-50 bg-white border-t border-pastel-200 px-4 py-3 safe-area-bottom"
         style={{
           left: isPC ? 'calc(50% - 15%)' : '0',
           right: isPC ? 'auto' : '0',
           width: isPC ? '30%' : '100%',
-          transform: hideBottomBar && !isPC ? 'translateY(120%)' : 'translateY(0)',
-          transition: hideBottomBar !== undefined ? 'transform 0.3s ease-out' : 'none',
+          transform: !isPC && hideBottomBar ? 'translateY(150%)' : 'translateY(0)',
+          transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
           willChange: 'transform',
         }}
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex gap-2">
-            {/* 좌/우 이동 버튼 */}
             <button
               onClick={handlePrevEvent}
               disabled={!previousEventDate}
@@ -190,7 +199,6 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
               </svg>
             </button>
 
-            {/* Today 버튼 */}
             <button
               onClick={handleToday}
               className="px-4 py-2 text-pastel-orange rounded-lg transition font-semibold hover:bg-pastel-50"
@@ -198,7 +206,6 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
               Today
             </button>
 
-            {/* 삭제 버튼 */}
             <button
               onClick={() => {
                 if (selectedEvents.length > 0) {
@@ -221,7 +228,6 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
               </svg>
             </button>
 
-            {/* 다음 일정 버튼 */}
             <button
               onClick={handleNextEvent}
               disabled={!nextEventDate}
@@ -235,7 +241,6 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
           </div>
 
           <div className="flex gap-2">
-            {/* Todo 버튼 */}
             {onOpenTodoList && (
               <button
                 onClick={onOpenTodoList}
@@ -245,7 +250,6 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
               </button>
             )}
 
-            {/* Add 버튼 */}
             <button
               onClick={() => onOpenEventEditor()}
               className="px-4 py-2 bg-pastel-400 text-white rounded-lg hover:bg-pastel-500 transition font-semibold"
