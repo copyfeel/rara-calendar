@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { getTodayDate, getRelativeDateString } from '../../utils/dateHelper';
 import type { Event } from '../../types/event';
@@ -34,19 +34,34 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
   const today = getTodayDate();
   const [hideBottomBar, setHideBottomBar] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = useCallback(() => {
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     if (isPC) return;
-    setHideBottomBar(true);
 
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
+    const target = e.currentTarget;
+    const hasScroll = target.scrollHeight > target.clientHeight;
+
+    if (hasScroll) {
+      setHideBottomBar(true);
+
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      scrollTimeoutRef.current = setTimeout(() => {
+        setHideBottomBar(false);
+      }, 1000);
     }
-
-    scrollTimeoutRef.current = setTimeout(() => {
-      setHideBottomBar(false);
-    }, 1000);
   }, [isPC]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const selectedEvents = events.filter(event => event.date === selectedDate);
   const previousEventDate = events
@@ -101,7 +116,7 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
       )}
 
       {/* 일정 리스트 - 스크롤 가능, 하단 바 아래 지정 */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden" onScroll={handleScroll}>
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden" onScroll={handleScroll}>
         <div className="p-4 space-y-3 pb-20">
         {selectedEvents.length === 0 ? (
           <div className="text-center text-pastel-400 py-6">
@@ -156,8 +171,9 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
           left: isPC ? 'calc(50% - 15%)' : '0',
           right: isPC ? 'auto' : '0',
           width: isPC ? '30%' : '100%',
-          transform: !isPC && hideBottomBar ? 'translateY(100%)' : 'translateY(0)',
-          transition: 'transform 0.3s ease-out',
+          transform: hideBottomBar && !isPC ? 'translateY(120%)' : 'translateY(0)',
+          transition: hideBottomBar !== undefined ? 'transform 0.3s ease-out' : 'none',
+          willChange: 'transform',
         }}
       >
         <div className="flex items-center justify-between gap-2">
