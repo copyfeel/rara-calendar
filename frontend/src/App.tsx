@@ -144,13 +144,12 @@ function App() {
 
   // 로그인 상태 - 메인 앱
   return (
-    <div className="bg-pastel-100 flex justify-center" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="bg-pastel-100 flex justify-center w-screen h-screen overflow-hidden" style={{ touchAction: 'none' }}>
       <div
-        className="bg-pastel-50 flex flex-col shadow-lg"
+        className="bg-pastel-50 flex flex-col shadow-lg overflow-hidden"
         style={{
           width: isPC ? '30%' : '100%',
-          height: '100%',
-          overflow: 'hidden',
+          touchAction: 'auto',
         }}
       >
         <Header
