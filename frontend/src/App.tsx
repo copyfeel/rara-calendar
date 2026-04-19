@@ -124,7 +124,7 @@ function App() {
   // 로그인 상태 - 메인 앱
   return (
     <div className="min-h-screen bg-pastel-100 flex justify-center">
-      <div className="w-full max-w-sm md:max-w-md lg:max-w-[480px] bg-pastel-50 flex flex-col shadow-lg">
+      <div className="w-full md:w-3/5 bg-pastel-50 flex flex-col shadow-lg">
         <Header
           onOpenSearch={() => {
             setShowTodoList(false);

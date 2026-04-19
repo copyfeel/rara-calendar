@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import dayjs from 'dayjs';
 import { useEventStore } from '../../store/eventStore';
 import {
@@ -40,6 +40,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   const [touchStartX, setTouchStartX] = useState<number>(0);
   const [dragX, setDragX] = useState(0);
   const [slideDir, setSlideDir] = useState<'left' | 'right' | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth() + 1;
@@ -74,24 +75,45 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   const handleTouchEnd = (e: React.TouchEvent) => {
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX - touchEndX;
-    const threshold = 50;
 
-    if (Math.abs(diff) > threshold && onMonthChange) {
+    // 컨테이너 너비 기반 40% 임계값 계산
+    const containerWidth = containerRef.current?.offsetWidth || window.innerWidth;
+    const swipePercentage = Math.abs(diff) / containerWidth * 100;
+    const threshold = 40;
+
+    if (swipePercentage > threshold && onMonthChange) {
       const direction = diff > 0 ? 'left' : 'right';
       setSlideDir(direction);
 
       setTimeout(() => {
+        // 선택된 날짜의 '일' 부분 추출
+        const selectedDay = selectedDate ? parseInt(selectedDate.split('-')[2]) : null;
+
         const newDate = new Date(currentMonth);
         if (diff > 0) {
           newDate.setMonth(newDate.getMonth() + 1);
         } else {
           newDate.setMonth(newDate.getMonth() - 1);
         }
+
+        // 선택된 '일'을 새 달에서 유지 (말일 처리)
+        if (selectedDay) {
+          newDate.setDate(1); // 1일로 먼저 설정
+          newDate.setMonth(newDate.getMonth());
+          const lastDayOfMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
+          const dayToSet = Math.min(selectedDay, lastDayOfMonth);
+          newDate.setDate(dayToSet);
+
+          const newDateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(dayToSet).padStart(2, '0')}`;
+          setSelectedDate(newDateStr);
+        }
+
         onMonthChange(newDate);
         setSlideDir(null);
         setDragX(0);
       }, 300);
     } else {
+      // 40% 미만 → 원위치로 복귀
       setDragX(0);
     }
   };
@@ -102,7 +124,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   };
 
   return (
-    <div className="bg-white overflow-hidden" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+    <div ref={containerRef} className="bg-white overflow-hidden" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {/* 캘린더 그리드 */}
       <div
         className={`grid grid-cols-7 gap-0 ${slideDir === 'left' ? 'slide-out-left' : slideDir === 'right' ? 'slide-out-right' : ''}`}
