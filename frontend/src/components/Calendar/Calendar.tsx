@@ -39,27 +39,129 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   const { events, selectedDate, setSelectedDate } = useEventStore();
   const [touchStartX, setTouchStartX] = useState<number>(0);
   const [dragX, setDragX] = useState(0);
-  const [slideDir, setSlideDir] = useState<'left' | 'right' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth() + 1;
-  const calendarDays = getMonthCalendarDays(year, month);
   const today = getTodayDate();
 
-  // 이 달에 음력을 표시할 날짜 집합 (4일, 주당 1일)
-  const lunarDisplayDays = getLunarDisplayDays(year, month);
-
-  const getEventsForDate = (day: number | null) => {
-    if (!day) return [];
-    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return events.filter(event => event.date === dateStr);
+  // 이전/다음 달 계산
+  const getPrevMonth = (date: Date) => {
+    const d = new Date(date);
+    d.setMonth(d.getMonth() - 1);
+    return d;
   };
 
-  const handleDateClick = (day: number | null) => {
-    if (!day) return;
-    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    setSelectedDate(dateStr);
+  const getNextMonth = (date: Date) => {
+    const d = new Date(date);
+    d.setMonth(d.getMonth() + 1);
+    return d;
+  };
+
+  const prevMonth = getPrevMonth(currentMonth);
+  const nextMonth = getNextMonth(currentMonth);
+
+  // 단일 달의 캘린더 렌더링 헬퍼
+  const renderMonthGrid = (month: Date) => {
+    const year = month.getFullYear();
+    const monthNum = month.getMonth() + 1;
+    const calendarDays = getMonthCalendarDays(year, monthNum);
+    const lunarDisplayDays = getLunarDisplayDays(year, monthNum);
+
+    const getEventsForDate = (day: number | null) => {
+      if (!day) return [];
+      const dateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      return events.filter(event => event.date === dateStr);
+    };
+
+    return (
+      <div className="w-full flex-shrink-0">
+        <div className="grid grid-cols-7 gap-0">
+          {calendarDays.map((day, idx) => {
+            const dateStr = day
+              ? `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+              : null;
+            const dayEvents = day ? getEventsForDate(day) : [];
+            const isTodayCell = dateStr === today;
+            const isSelected = dateStr === selectedDate;
+            const isCurrentMonth = day !== null;
+            const isSunday = dateStr ? dayjs(dateStr).day() === 0 : false;
+            const showLunar = day !== null && lunarDisplayDays.has(day);
+            const lunarDate = showLunar ? solarToLunar(year, monthNum, day!) : '';
+
+            const getCellBgClass = (): string => {
+              if (isSelected) return 'bg-pastel-400';
+              if (!isCurrentMonth) return 'bg-pastel-50';
+              if (dayEvents.length > 0) {
+                const cat = dayEvents[0].category;
+                return getCategoryBgColor(cat) || 'bg-pastel-100';
+              }
+              return '';
+            };
+
+            return (
+              <div
+                key={`${idx}-${day}`}
+                onClick={() => day && setSelectedDate(dateStr || '')}
+                className={[
+                  'min-h-16 p-0 cursor-pointer transition-colors',
+                  getCellBgClass(),
+                  isSelected ? '' : 'hover:bg-pastel-100',
+                  isTodayCell ? 'border border-pastel-accent' : '',
+                ].filter(Boolean).join(' ')}
+              >
+                <div className="p-1 h-full flex flex-col">
+                  <div className="flex items-baseline gap-0.5 mb-0.5">
+                    <span
+                      className={`font-bold text-sm leading-none ${
+                        isSelected
+                          ? 'text-white'
+                          : isSunday && isCurrentMonth
+                          ? 'text-red-500'
+                          : isCurrentMonth
+                          ? 'text-pastel-700'
+                          : 'text-pastel-300'
+                      }`}
+                    >
+                      {day}
+                    </span>
+                    {lunarDate && (
+                      <span
+                        className="font-normal text-pastel-600 leading-none"
+                        style={{ fontSize: '8px' }}
+                      >
+                        {lunarDate}
+                      </span>
+                    )}
+                    {isTodayCell && (
+                      <span className="text-pastel-orange font-semibold leading-none" style={{ fontSize: '8px' }}>
+                        오늘
+                      </span>
+                    )}
+                  </div>
+                  {isCurrentMonth && (
+                    <div className="space-y-0.5">
+                      {dayEvents.slice(0, 1).map((event, i) => (
+                        <div
+                          key={i}
+                          className="bg-pastel-200 text-pastel-700 px-0.5 rounded truncate"
+                          style={{ fontSize: '9px' }}
+                        >
+                          {event.title.substring(0, 5)}
+                        </div>
+                      ))}
+                      {dayEvents.length > 1 && (
+                        <div className="text-pastel-500 font-semibold" style={{ fontSize: '9px' }}>
+                          +{dayEvents.length - 1}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -72,161 +174,62 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
     setDragX(dx);
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX - touchEndX;
-
-    // 컨테이너 너비 기반 40% 임계값 계산
+  const handleTouchEnd = () => {
     const containerWidth = containerRef.current?.offsetWidth || window.innerWidth;
-    const swipePercentage = Math.abs(diff) / containerWidth * 100;
-    const threshold = 40;
+    const swipePercentage = Math.abs(dragX) / containerWidth * 100;
 
-    if (swipePercentage > threshold && onMonthChange) {
-      const direction = diff > 0 ? 'left' : 'right';
-      setSlideDir(direction);
+    if (swipePercentage > 40 && onMonthChange) {
+      // 선택된 날짜의 '일' 부분 추출
+      const selectedDay = selectedDate ? parseInt(selectedDate.split('-')[2]) : null;
 
-      setTimeout(() => {
-        // 선택된 날짜의 '일' 부분 추출
-        const selectedDay = selectedDate ? parseInt(selectedDate.split('-')[2]) : null;
+      const newDate = new Date(currentMonth);
+      if (dragX < 0) {
+        // 왼쪽으로 스와이프 → 다음 달
+        newDate.setMonth(newDate.getMonth() + 1);
+      } else {
+        // 오른쪽으로 스와이프 → 이전 달
+        newDate.setMonth(newDate.getMonth() - 1);
+      }
 
-        const newDate = new Date(currentMonth);
-        if (diff > 0) {
-          newDate.setMonth(newDate.getMonth() + 1);
-        } else {
-          newDate.setMonth(newDate.getMonth() - 1);
-        }
+      // 선택된 '일'을 새 달에서 유지 (말일 처리)
+      if (selectedDay) {
+        const lastDayOfMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
+        const dayToSet = Math.min(selectedDay, lastDayOfMonth);
+        newDate.setDate(dayToSet);
 
-        // 선택된 '일'을 새 달에서 유지 (말일 처리)
-        if (selectedDay) {
-          newDate.setDate(1); // 1일로 먼저 설정
-          newDate.setMonth(newDate.getMonth());
-          const lastDayOfMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
-          const dayToSet = Math.min(selectedDay, lastDayOfMonth);
-          newDate.setDate(dayToSet);
+        const newDateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(dayToSet).padStart(2, '0')}`;
+        setSelectedDate(newDateStr);
+      }
 
-          const newDateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(dayToSet).padStart(2, '0')}`;
-          setSelectedDate(newDateStr);
-        }
-
-        onMonthChange(newDate);
-        setSlideDir(null);
-        setDragX(0);
-      }, 300);
-    } else {
-      // 40% 미만 → 원위치로 복귀
-      setDragX(0);
+      onMonthChange(newDate);
     }
+
+    setDragX(0);
   };
 
-  const containerStyle: React.CSSProperties = {
-    transform: `translateX(${dragX}px)`,
-    transition: dragX === 0 && !slideDir ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-  };
+  // 캐로셀 컨테이너 transform 계산
+  const carouselTransform = `translateX(calc(-100% + ${dragX}px))`;
+  const isAnimating = dragX === 0;
 
   return (
-    <div ref={containerRef} className="bg-white overflow-hidden" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      {/* 캘린더 그리드 */}
+    <div
+      ref={containerRef}
+      className="bg-white overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* 캐로셀: 이전월 | 현재월 | 다음월 */}
       <div
-        className={`grid grid-cols-7 gap-0 ${slideDir === 'left' ? 'slide-out-left' : slideDir === 'right' ? 'slide-out-right' : ''}`}
-        style={containerStyle}
+        style={{
+          display: 'flex',
+          transform: carouselTransform,
+          transition: isAnimating ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+        }}
       >
-        {calendarDays.map((day, idx) => {
-          const dateStr = day
-            ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-            : null;
-          const dayEvents = day ? getEventsForDate(day) : [];
-          const isTodayCell = dateStr === today;
-          const isSelected = dateStr === selectedDate;
-          const isCurrentMonth = day !== null;
-
-          // ✅ 실제 요일로 일요일 판단 (idx % 7 방식 제거)
-          const isSunday = dateStr ? dayjs(dateStr).day() === 0 : false;
-
-          // 음력은 이 달 중 4일(주당 1일)만 표시
-          const showLunar = day !== null && lunarDisplayDays.has(day);
-          const lunarDate = showLunar ? solarToLunar(year, month, day!) : '';
-
-          // 배경색을 하나의 함수로 결정 → 클래스 충돌 완전 방지
-          const getCellBgClass = (): string => {
-            if (isSelected) return 'bg-pastel-400';           // 선택: 가장 우선
-            if (!isCurrentMonth) return 'bg-pastel-50';       // 비현재월
-            if (dayEvents.length > 0) {
-              const cat = dayEvents[0].category;
-              return getCategoryBgColor(cat) || 'bg-pastel-100';
-            }
-            return '';                                         // 빈 날짜: 흰 배경
-          };
-
-          return (
-            <div
-              key={`${idx}-${day}`}
-              onClick={() => handleDateClick(day)}
-              className={[
-                'min-h-16 p-0 cursor-pointer transition-colors',
-                getCellBgClass(),
-                // hover: hoverOnlyWhenSupported 덕에 터치 기기에서는 발동 안 함
-                // 선택된 날짜는 hover 효과 제거
-                isSelected ? '' : 'hover:bg-pastel-100',
-                isTodayCell ? 'border border-pastel-accent' : '',
-              ].filter(Boolean).join(' ')}
-            >
-              {/* 칸 내부 */}
-              <div className="p-1 h-full flex flex-col">
-                {/* 날짜 + 음력 (한 줄) */}
-                <div className="flex items-baseline gap-0.5 mb-0.5">
-                  {/* ✅ 날짜 크기 50% 키움: text-xs → text-sm */}
-                  <span
-                    className={`font-bold text-sm leading-none ${
-                      isSelected
-                        ? 'text-white'
-                        : isSunday && isCurrentMonth
-                        ? 'text-red-500'
-                        : isCurrentMonth
-                        ? 'text-pastel-700'
-                        : 'text-pastel-300'
-                    }`}
-                  >
-                    {day}
-                  </span>
-                  {/* ✅ 음력 크기 30% 줄임: text-xs(12px) → 8px, 진한 그레이 */}
-                  {lunarDate && (
-                    <span
-                      className="font-normal text-pastel-600 leading-none"
-                      style={{ fontSize: '8px' }}
-                    >
-                      {lunarDate}
-                    </span>
-                  )}
-                  {isTodayCell && (
-                    <span className="text-pastel-orange font-semibold leading-none" style={{ fontSize: '8px' }}>
-                      오늘
-                    </span>
-                  )}
-                </div>
-
-                {/* 일정 미리보기 */}
-                {isCurrentMonth && (
-                  <div className="space-y-0.5">
-                    {dayEvents.slice(0, 1).map((event, i) => (
-                      <div
-                        key={i}
-                        className="bg-pastel-200 text-pastel-700 px-0.5 rounded truncate"
-                        style={{ fontSize: '9px' }}
-                      >
-                        {event.title.substring(0, 5)}
-                      </div>
-                    ))}
-                    {dayEvents.length > 1 && (
-                      <div className="text-pastel-500 font-semibold" style={{ fontSize: '9px' }}>
-                        +{dayEvents.length - 1}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {renderMonthGrid(prevMonth)}
+        {renderMonthGrid(currentMonth)}
+        {renderMonthGrid(nextMonth)}
       </div>
     </div>
   );

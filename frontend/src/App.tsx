@@ -23,6 +23,7 @@ function App() {
   const [showTodoList, setShowTodoList] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isPC, setIsPC] = useState(window.innerWidth >= 768);
 
   // 캘린더 하단 위치 계산 (투두 리스트 최대 높이 결정)
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -46,12 +47,16 @@ function App() {
     updateCalendarBottom();
 
     // 리사이즈 및 방향 전환 시 재측정
-    window.addEventListener('resize', updateCalendarBottom);
-    window.addEventListener('orientationchange', updateCalendarBottom);
+    const handleResize = () => {
+      updateCalendarBottom();
+      setIsPC(window.innerWidth >= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
 
     return () => {
-      window.removeEventListener('resize', updateCalendarBottom);
-      window.removeEventListener('orientationchange', updateCalendarBottom);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
     };
   }, [updateCalendarBottom, currentMonth]);
 
@@ -124,7 +129,12 @@ function App() {
   // 로그인 상태 - 메인 앱
   return (
     <div className="min-h-screen bg-pastel-100 flex justify-center">
-      <div className="w-full md:w-3/5 bg-pastel-50 flex flex-col shadow-lg">
+      <div
+        className="bg-pastel-50 flex flex-col shadow-lg"
+        style={{
+          width: isPC ? '30%' : '100%',
+        }}
+      >
         <Header
           onOpenSearch={() => {
             setShowTodoList(false);
