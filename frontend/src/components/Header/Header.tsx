@@ -1,5 +1,6 @@
 import { useEventStore } from '../../store/eventStore';
-import { useEffect, useRef } from 'react';
+import { useAuthStore } from '../../store/authStore';
+import { useEffect, useRef, useState } from 'react';
 
 interface HeaderProps {
   onOpenSearch: () => void;
@@ -10,7 +11,19 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth, onMonthChange }) => {
   useEventStore();
+  const { signOut } = useAuthStore();
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out failed:', error);
+      setIsSigningOut(false);
+    }
+  };
 
   // 모바일 환경에서 헤더 위치를 원위치로 복구
   useEffect(() => {
@@ -100,6 +113,18 @@ const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenAdmin, currentMonth
         >
           <svg className="w-6 h-6 text-pastel-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+        </button>
+
+        {/* 로그아웃 버튼 */}
+        <button
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className="p-2 hover:bg-pastel-100 rounded-lg transition disabled:opacity-50"
+          title="로그아웃"
+        >
+          <svg className="w-6 h-6 text-pastel-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
         </button>
       </div>

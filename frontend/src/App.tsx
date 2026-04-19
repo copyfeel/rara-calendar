@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useEventStore } from './store/eventStore';
+import { useAuthStore } from './store/authStore';
 import { useNotification } from './hooks/useNotification';
 import Calendar from './components/Calendar/Calendar';
 import Header from './components/Header/Header';
@@ -8,11 +9,14 @@ import EventDisplay from './components/EventDisplay/EventDisplay';
 import SearchScreen from './components/SearchScreen/SearchScreen';
 import TodoList from './components/TodoList/TodoList';
 import AdminPanel from './components/AdminPanel/AdminPanel';
+import LoginScreen from './components/Auth/LoginScreen';
 import type { Event } from './types/event';
 import './App.css';
 
 function App() {
-  const { loadFromStorage, saveToStorage } = useEventStore();
+  const { loadFromStorage, saveToStorage, initializeFirestoreSync, clearFirestoreSync } =
+    useEventStore();
+  const { user, loading, initialized } = useAuthStore();
   const [showEventEditor, setShowEventEditor] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | undefined>();
   const [showSearchScreen, setShowSearchScreen] = useState(false);
@@ -64,9 +68,19 @@ function App() {
     };
   }, [showTodoList, showSearchScreen, showEventEditor, showAdminPanel]);
 
+  // Firebase 동기화 관리
   useEffect(() => {
-    loadFromStorage();
-  }, [loadFromStorage]);
+    if (!initialized) return;
+
+    if (user) {
+      // 사용자 로그인 → Firestore 동기화 시작
+      initializeFirestoreSync(user.uid);
+    } else {
+      // 사용자 로그아웃 → localStorage로 돌아가기
+      clearFirestoreSync();
+      loadFromStorage();
+    }
+  }, [user, initialized, initializeFirestoreSync, clearFirestoreSync, loadFromStorage]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -84,6 +98,24 @@ function App() {
     };
   }, [saveToStorage]);
 
+  // 인증 시스템 초기화 중
+  if (!initialized || loading) {
+    return (
+      <div className="w-full min-h-screen bg-pastel-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🗓️</div>
+          <p className="text-pastel-700">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 미로그인 상태
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  // 로그인 상태 - 메인 앱
   return (
     <div className="w-full min-h-screen bg-pastel-50 flex flex-col">
       <Header
