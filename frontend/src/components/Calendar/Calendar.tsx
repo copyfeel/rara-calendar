@@ -39,6 +39,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   const { events, selectedDate, setSelectedDate } = useEventStore();
   const [touchStartX, setTouchStartX] = useState<number>(0);
   const [dragX, setDragX] = useState(0);
+  const [isSnapping, setIsSnapping] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const today = getTodayDate();
@@ -177,8 +178,12 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   const handleTouchEnd = () => {
     const containerWidth = containerRef.current?.offsetWidth || window.innerWidth;
     const swipePercentage = Math.abs(dragX) / containerWidth * 100;
+    const threshold = 25; // 25% 임계값
 
-    if (swipePercentage > 40 && onMonthChange) {
+    // 스냅 애니메이션 시작
+    setIsSnapping(true);
+
+    if (swipePercentage > threshold && onMonthChange) {
       // 선택된 날짜의 '일' 부분 추출
       const selectedDay = selectedDate ? parseInt(selectedDate.split('-')[2]) : null;
 
@@ -204,12 +209,17 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
       onMonthChange(newDate);
     }
 
+    // 부드러운 스냅 애니메이션으로 원위치 또는 다음 달로 이동
     setDragX(0);
+
+    // 애니메이션 완료 후 스냅 상태 해제
+    setTimeout(() => setIsSnapping(false), 300);
   };
 
   // 캐로셀 컨테이너 transform 계산
   const carouselTransform = `translateX(calc(-100% + ${dragX}px))`;
-  const isAnimating = dragX === 0;
+  // 스냅 중이거나 dragX가 0일 때 부드러운 전환
+  const shouldTransition = isSnapping || dragX === 0;
 
   return (
     <div
@@ -224,7 +234,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
         style={{
           display: 'flex',
           transform: carouselTransform,
-          transition: isAnimating ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+          transition: shouldTransition ? 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
         }}
       >
         {renderMonthGrid(prevMonth)}
