@@ -38,6 +38,8 @@ interface CalendarProps {
 const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   const { events, selectedDate, setSelectedDate } = useEventStore();
   const [touchStartX, setTouchStartX] = useState<number>(0);
+  const [dragX, setDragX] = useState(0);
+  const [slideDir, setSlideDir] = useState<'left' | 'right' | null>(null);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth() + 1;
@@ -61,30 +63,51 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
+    setDragX(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const dx = e.touches[0].clientX - touchStartX;
+    setDragX(dx);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!onMonthChange) return;
-
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX - touchEndX;
     const threshold = 50;
 
-    if (Math.abs(diff) > threshold) {
-      const newDate = new Date(currentMonth);
-      if (diff > 0) {
-        newDate.setMonth(newDate.getMonth() + 1);
-      } else {
-        newDate.setMonth(newDate.getMonth() - 1);
-      }
-      onMonthChange(newDate);
+    if (Math.abs(diff) > threshold && onMonthChange) {
+      const direction = diff > 0 ? 'left' : 'right';
+      setSlideDir(direction);
+
+      setTimeout(() => {
+        const newDate = new Date(currentMonth);
+        if (diff > 0) {
+          newDate.setMonth(newDate.getMonth() + 1);
+        } else {
+          newDate.setMonth(newDate.getMonth() - 1);
+        }
+        onMonthChange(newDate);
+        setSlideDir(null);
+        setDragX(0);
+      }, 300);
+    } else {
+      setDragX(0);
     }
   };
 
+  const containerStyle: React.CSSProperties = {
+    transform: `translateX(${dragX}px)`,
+    transition: dragX === 0 && !slideDir ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+  };
+
   return (
-    <div className="bg-white" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="bg-white overflow-hidden" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {/* 캘린더 그리드 */}
-      <div className="grid grid-cols-7 gap-0">
+      <div
+        className={`grid grid-cols-7 gap-0 ${slideDir === 'left' ? 'slide-out-left' : slideDir === 'right' ? 'slide-out-right' : ''}`}
+        style={containerStyle}
+      >
         {calendarDays.map((day, idx) => {
           const dateStr = day
             ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`

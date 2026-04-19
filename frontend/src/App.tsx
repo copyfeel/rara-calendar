@@ -28,6 +28,12 @@ function App() {
   const calendarRef = useRef<HTMLDivElement>(null);
   const [calendarBottom, setCalendarBottom] = useState<number>(0);
 
+  // 검색/투두에서 날짜 선택 시 월 변경
+  const handleDateSelect = useCallback((dateStr: string) => {
+    const date = new Date(dateStr);
+    setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+  }, []);
+
   const updateCalendarBottom = useCallback(() => {
     if (calendarRef.current) {
       const rect = calendarRef.current.getBoundingClientRect();
@@ -117,36 +123,38 @@ function App() {
 
   // 로그인 상태 - 메인 앱
   return (
-    <div className="w-full min-h-screen bg-pastel-50 flex flex-col">
-      <Header
-        onOpenSearch={() => {
-          setShowTodoList(false);
-          setShowSearchScreen(true);
-        }}
-        onOpenAdmin={() => {
-          setShowTodoList(false);
-          setShowAdminPanel(true);
-        }}
-        currentMonth={currentMonth}
-        onMonthChange={setCurrentMonth}
-      />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* calendarRef로 캘린더 하단 위치 측정 */}
-        <div ref={calendarRef}>
-          <Calendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
-        </div>
-        <EventDisplay
-          onOpenEventEditor={(event) => {
+    <div className="min-h-screen bg-pastel-100 flex justify-center">
+      <div className="w-full max-w-sm md:max-w-md lg:max-w-[480px] bg-pastel-50 flex flex-col shadow-lg">
+        <Header
+          onOpenSearch={() => {
             setShowTodoList(false);
-            setEditingEvent(event);
-            setShowEventEditor(true);
+            setShowSearchScreen(true);
           }}
-          onOpenTodoList={() => setShowTodoList(true)}
+          onOpenAdmin={() => {
+            setShowTodoList(false);
+            setShowAdminPanel(true);
+          }}
+          currentMonth={currentMonth}
           onMonthChange={setCurrentMonth}
         />
-      </main>
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* calendarRef로 캘린더 하단 위치 측정 */}
+          <div ref={calendarRef}>
+            <Calendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
+          </div>
+          <EventDisplay
+            onOpenEventEditor={(event) => {
+              setShowTodoList(false);
+              setEditingEvent(event);
+              setShowEventEditor(true);
+            }}
+            onOpenTodoList={() => setShowTodoList(true)}
+            onMonthChange={setCurrentMonth}
+          />
+        </main>
+      </div>
 
-      {/* 모달들 */}
+      {/* 모달들 - 전체 화면 사용 */}
       {showEventEditor && (
         <EventEditor
           editingEvent={editingEvent}
@@ -158,7 +166,10 @@ function App() {
       )}
 
       {showSearchScreen && (
-        <SearchScreen onClose={() => setShowSearchScreen(false)} />
+        <SearchScreen
+          onClose={() => setShowSearchScreen(false)}
+          onDateSelect={handleDateSelect}
+        />
       )}
 
       {/* 투두 리스트 - calendarBottom 전달 */}
@@ -166,6 +177,7 @@ function App() {
         <TodoList
           onClose={() => setShowTodoList(false)}
           calendarBottom={calendarBottom}
+          onDateSelect={handleDateSelect}
         />
       )}
 

@@ -5,12 +5,13 @@ import { getNextDaysEvents, getKoreanDayOfWeek } from '../../utils/dateHelper';
 interface TodoListProps {
   onClose: () => void;
   calendarBottom?: number;
+  onDateSelect: (date: string) => void;
 }
 
 const CLOSE_THRESHOLD = 80; // 80px 이상 드래그하면 닫힘
 
-const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
-  const { events } = useEventStore();
+const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDateSelect }) => {
+  const { events, setSelectedDate } = useEventStore();
   const [completedEvents, setCompletedEvents] = useState<Set<string>>(new Set());
 
   // ── 슬라이드 상태 ──
@@ -38,6 +39,12 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
     if (next.has(eventId)) next.delete(eventId);
     else next.add(eventId);
     setCompletedEvents(next);
+  };
+
+  const handleEventClick = (event: typeof events[0]) => {
+    setSelectedDate(event.date);
+    onDateSelect(event.date);
+    handleClose();
   };
 
   // ── 드래그 다운으로 닫기 ──
@@ -137,12 +144,14 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0 }) => {
               {upcomingEvents.map(event => (
                 <div
                   key={event.id}
-                  className="px-4 py-3 hover:bg-pastel-50 transition flex items-center gap-3"
+                  className="px-4 py-3 hover:bg-pastel-50 transition flex items-center gap-3 cursor-pointer"
+                  onClick={() => handleEventClick(event)}
                 >
                   <input
                     type="checkbox"
                     checked={completedEvents.has(event.id)}
                     onChange={() => handleToggleComplete(event.id)}
+                    onClick={(e) => e.stopPropagation()}
                     className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">

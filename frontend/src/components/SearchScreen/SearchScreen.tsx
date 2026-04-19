@@ -2,8 +2,13 @@ import { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { getKoreanDayOfWeek } from '../../utils/dateHelper';
 
-const SearchScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { events, deleteEvent } = useEventStore();
+interface SearchScreenProps {
+  onClose: () => void;
+  onDateSelect: (date: string) => void;
+}
+
+const SearchScreen: React.FC<SearchScreenProps> = ({ onClose, onDateSelect }) => {
+  const { events, deleteEvent, setSelectedDate } = useEventStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
@@ -41,9 +46,15 @@ const SearchScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
+  const handleEventClick = (event: typeof events[0]) => {
+    setSelectedDate(event.date);
+    onDateSelect(event.date);
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}
         <div className="sticky top-0 bg-white border-b border-pastel-200 p-4 flex justify-between items-center">
           <span className="text-lg font-semibold text-pastel-700">검색</span>
@@ -97,15 +108,17 @@ const SearchScreen: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               {filteredEvents.map(event => (
                 <div
                   key={event.id}
-                  className={`p-3 hover:bg-pastel-50 transition flex items-center gap-3 ${
+                  className={`p-3 hover:bg-pastel-50 transition flex items-center gap-3 cursor-pointer ${
                     editMode ? 'pl-8' : ''
                   }`}
+                  onClick={() => !editMode && handleEventClick(event)}
                 >
                   {editMode && (
                     <input
                       type="checkbox"
                       checked={selectedEvents.has(event.id)}
                       onChange={() => handleSelectEvent(event.id)}
+                      onClick={(e) => e.stopPropagation()}
                       className="rounded"
                     />
                   )}
