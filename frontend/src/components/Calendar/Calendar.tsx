@@ -224,7 +224,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   return (
     <div
       ref={containerRef}
-      className="bg-white overflow-hidden"
+      className="bg-white overflow-hidden relative z-20"
       style={{ touchAction: 'pan-y' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

@@ -74,18 +74,19 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
   const relativeDate = getRelativeDateString(selectedDate);
 
   return (
-    <div className="bg-pastel-50 border-t-2 border-pastel-200 flex flex-col flex-1">
+    <div className="bg-pastel-50 border-t-2 border-pastel-200 flex flex-col flex-1 overflow-hidden">
       {/* 날짜 표시 - "~일 후" 부분만 표시 */}
       {!isToday && relativeDate && (
-        <div className="px-4 py-2 bg-white border-b border-pastel-200 text-left">
+        <div className="px-4 py-2 bg-white border-b border-pastel-200 text-left flex-shrink-0">
           <span className="text-sm text-pastel-600 font-semibold">
             + {relativeDate}
           </span>
         </div>
       )}
 
-      {/* 일정 리스트 - 하단 고정 바 높이(56px)만큼 패딩 확보 */}
-      <div className="p-4 space-y-3 flex-1 overflow-y-auto pb-16">
+      {/* 일정 리스트 - 스크롤 가능, 하단 바 아래 지정 */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="p-4 space-y-3 pb-20">
         {selectedEvents.length === 0 ? (
           <div className="text-center text-pastel-400 py-6">
             <p>등록된 일정이 없습니다</p>
@@ -129,11 +130,12 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
             </div>
           ))
         )}
+        </div>
       </div>
 
       {/* 하단 컨트롤 바 - 스크롤과 무관하게 화면 하단 고정 */}
       <div
-        className="fixed bottom-0 z-40 bg-white border-t border-pastel-200 px-4 py-3 safe-area-bottom"
+        className="fixed bottom-0 z-50 bg-white border-t border-pastel-200 px-4 py-3 safe-area-bottom"
         style={{
           left: isPC ? 'calc(50% - 15%)' : '0',
           right: isPC ? 'auto' : '0',
