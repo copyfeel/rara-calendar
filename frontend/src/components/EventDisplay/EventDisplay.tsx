@@ -25,9 +25,10 @@ interface EventDisplayProps {
   onOpenEventEditor: (event?: Event) => void;
   onOpenTodoList?: () => void;
   onMonthChange?: (date: Date) => void;
+  isPC?: boolean;
 }
 
-const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTodoList, onMonthChange }) => {
+const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTodoList, onMonthChange, isPC = false }) => {
   const { events, selectedDate, setSelectedDate, deleteEvent } = useEventStore();
   const today = getTodayDate();
 
@@ -131,7 +132,14 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
       </div>
 
       {/* 하단 컨트롤 바 - 스크롤과 무관하게 화면 하단 고정 */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-pastel-200 px-4 py-3 safe-area-bottom">
+      <div
+        className="fixed bottom-0 z-40 bg-white border-t border-pastel-200 px-4 py-3 safe-area-bottom"
+        style={{
+          left: isPC ? 'calc(50% - 15%)' : '0',
+          right: isPC ? 'auto' : '0',
+          width: isPC ? '30%' : '100%',
+        }}
+      >
         <div className="flex items-center justify-between gap-2">
           <div className="flex gap-2">
             {/* 좌/우 이동 버튼 */}

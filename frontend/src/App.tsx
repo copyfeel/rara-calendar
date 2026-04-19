@@ -29,6 +29,22 @@ function App() {
   const calendarRef = useRef<HTMLDivElement>(null);
   const [calendarBottom, setCalendarBottom] = useState<number>(0);
 
+  // 월 변경 시 선택된 날짜의 '일'을 유지
+  const handleMonthChange = useCallback((newMonth: Date) => {
+    setCurrentMonth(newMonth);
+
+    // PC 버전에서 선택된 날짜의 '일'을 새 달에서도 유지
+    const { selectedDate, setSelectedDate } = useEventStore.getState();
+    if (selectedDate) {
+      const selectedDay = parseInt(selectedDate.split('-')[2]);
+      const lastDayOfMonth = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0).getDate();
+      const dayToSet = Math.min(selectedDay, lastDayOfMonth);
+
+      const newDateStr = `${newMonth.getFullYear()}-${String(newMonth.getMonth() + 1).padStart(2, '0')}-${String(dayToSet).padStart(2, '0')}`;
+      setSelectedDate(newDateStr);
+    }
+  }, []);
+
   // 검색/투두에서 날짜 선택 시 월 변경
   const handleDateSelect = useCallback((dateStr: string) => {
     const date = new Date(dateStr);
@@ -145,12 +161,12 @@ function App() {
             setShowAdminPanel(true);
           }}
           currentMonth={currentMonth}
-          onMonthChange={setCurrentMonth}
+          onMonthChange={handleMonthChange}
         />
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* calendarRef로 캘린더 하단 위치 측정 */}
           <div ref={calendarRef}>
-            <Calendar currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
+            <Calendar currentMonth={currentMonth} onMonthChange={handleMonthChange} />
           </div>
           <EventDisplay
             onOpenEventEditor={(event) => {
@@ -159,7 +175,8 @@ function App() {
               setShowEventEditor(true);
             }}
             onOpenTodoList={() => setShowTodoList(true)}
-            onMonthChange={setCurrentMonth}
+            onMonthChange={handleMonthChange}
+            isPC={isPC}
           />
         </main>
       </div>
