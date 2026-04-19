@@ -6,11 +6,12 @@ interface TodoListProps {
   onClose: () => void;
   calendarBottom?: number;
   onDateSelect: (date: string) => void;
+  isPC?: boolean;
 }
 
 const CLOSE_THRESHOLD = 80; // 80px 이상 드래그하면 닫힘
 
-const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDateSelect }) => {
+const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDateSelect, isPC = false }) => {
   const { events, setSelectedDate } = useEventStore();
   const [completedEvents, setCompletedEvents] = useState<Set<string>>(new Set());
 
@@ -98,8 +99,11 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
 
       {/* 투두 리스트 패널 */}
       <div
-        className="fixed left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
+        className="fixed z-50 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden"
         style={{
+          left: isPC ? 'calc(50% - 15%)' : '0',
+          right: isPC ? 'auto' : '0',
+          width: isPC ? '30%' : '100%',
           bottom: 0,
           maxHeight,
           transform: panelTransform,

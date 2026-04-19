@@ -102,7 +102,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                 key={`${idx}-${day}`}
                 onClick={() => day && setSelectedDate(dateStr || '')}
                 className={[
-                  'min-h-16 p-0 cursor-pointer transition-colors',
+                  'min-h-16 p-0 cursor-pointer transition-colors rounded-md',
                   getCellBgClass(),
                   isSelected ? '' : 'hover:bg-pastel-100',
                   isTodayCell ? 'border border-pastel-accent' : '',

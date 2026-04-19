@@ -205,6 +205,7 @@ function App() {
           onClose={() => setShowTodoList(false)}
           calendarBottom={calendarBottom}
           onDateSelect={handleDateSelect}
+          isPC={isPC}
         />
       )}
 
