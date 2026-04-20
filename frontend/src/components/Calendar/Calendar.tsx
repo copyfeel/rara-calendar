@@ -16,13 +16,13 @@ const getCategoryBgColor = (category: string | null | undefined): string => {
     case '업무':
       return 'bg-green-100';
     case '카피':
-      return 'bg-yellow-100';
+      return 'bg-indigo-200';
     case 'Event':
       return 'bg-orange-100';
     case '가족':
-      return 'bg-amber-100';
+      return 'bg-stone-200';
     case '예주':
-      return 'bg-pink-100';
+      return 'bg-pink-300';
     case '마님':
       return 'bg-red-100';
     default:
