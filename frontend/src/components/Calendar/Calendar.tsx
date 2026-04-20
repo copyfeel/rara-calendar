@@ -91,7 +91,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
             const getCellBgClass = (): string => {
               if (isSelected) return 'bg-pastel-400';
               if (!isCurrentMonth) return 'bg-pastel-50';
-              if (dayEvents.length > 0) return 'bg-yellow-100'; // '카피' 색상 고정
+              if (dayEvents.length > 0) return 'bg-gray-100'; // 연한 그레이색
               return '';
             };
 
