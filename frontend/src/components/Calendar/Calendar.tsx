@@ -169,7 +169,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const dx = e.touches[0].clientX - touchStartX;
-    setDragX(dx);
+    setDragX(dx * 0.75); // 저항감: 손가락보다 75% 속도로만 따라옴
   };
 
   const handleTouchEnd = () => {
@@ -210,7 +210,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
     setDragX(0);
 
     // 애니메이션 완료 후 스냅 상태 해제
-    setTimeout(() => setIsSnapping(false), 300);
+    setTimeout(() => setIsSnapping(false), 650);
   };
 
   // 캐로셀 컨테이너 transform 계산
@@ -232,7 +232,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
         style={{
           display: 'flex',
           transform: carouselTransform,
-          transition: shouldTransition ? 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+          transition: shouldTransition ? 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
         }}
       >
         {renderMonthGrid(prevMonth)}
