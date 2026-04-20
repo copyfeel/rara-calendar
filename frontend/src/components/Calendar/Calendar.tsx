@@ -41,6 +41,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
   const [dragX, setDragX] = useState(0);
   const [isSnapping, setIsSnapping] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartTime = useRef<number>(0);
 
   const today = getTodayDate();
 
@@ -164,36 +165,39 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
+    touchStartTime.current = Date.now();
     setDragX(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const dx = e.touches[0].clientX - touchStartX;
-    setDragX(dx * 0.75); // 저항감: 손가락보다 75% 속도로만 따라옴
+    setDragX(dx); // 1:1로 따라옴 (저항감 없음)
   };
 
   const handleTouchEnd = () => {
     const containerWidth = containerRef.current?.offsetWidth || window.innerWidth;
-    const swipePercentage = Math.abs(dragX) / containerWidth * 100;
-    const threshold = 25; // 25% 임계값
+    const elapsed = Date.now() - touchStartTime.current;
+    const absDragX = Math.abs(dragX);
+    const swipePercentage = absDragX / containerWidth * 100;
+    const velocity = absDragX / elapsed; // px/ms
 
-    // 스냅 애니메이션 시작
+    // 플릭 감지: 빠른 속도(0.4px/ms 이상) + 최소 이동 거리(20px 이상)
+    const isFlick = velocity > 0.4 && absDragX > 20;
+    // 드래그 거리 70% 이상
+    const isSufficientDrag = swipePercentage >= 70;
+
     setIsSnapping(true);
 
-    if (swipePercentage > threshold && onMonthChange) {
-      // 선택된 날짜의 '일' 부분 추출
+    if ((isFlick || isSufficientDrag) && onMonthChange) {
       const selectedDay = selectedDate ? parseInt(selectedDate.split('-')[2]) : null;
-
       const newDate = new Date(currentMonth);
+
       if (dragX < 0) {
-        // 왼쪽으로 스와이프 → 다음 달
-        newDate.setMonth(newDate.getMonth() + 1);
+        newDate.setMonth(newDate.getMonth() + 1); // 왼쪽 → 다음 달
       } else {
-        // 오른쪽으로 스와이프 → 이전 달
-        newDate.setMonth(newDate.getMonth() - 1);
+        newDate.setMonth(newDate.getMonth() - 1); // 오른쪽 → 이전 달
       }
 
-      // 선택된 '일'을 새 달에서 유지 (말일 처리)
       if (selectedDay) {
         const lastDayOfMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
         const dayToSet = Math.min(selectedDay, lastDayOfMonth);
@@ -206,11 +210,9 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
       onMonthChange(newDate);
     }
 
-    // 부드러운 스냅 애니메이션으로 원위치 또는 다음 달로 이동
+    // 원위치 또는 다음 달로 1초 애니메이션
     setDragX(0);
-
-    // 애니메이션 완료 후 스냅 상태 해제
-    setTimeout(() => setIsSnapping(false), 650);
+    setTimeout(() => setIsSnapping(false), 1000);
   };
 
   // 캐로셀 컨테이너 transform 계산
@@ -232,7 +234,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
         style={{
           display: 'flex',
           transform: carouselTransform,
-          transition: shouldTransition ? 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+          transition: shouldTransition ? 'transform 1s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
         }}
       >
         {renderMonthGrid(prevMonth)}
