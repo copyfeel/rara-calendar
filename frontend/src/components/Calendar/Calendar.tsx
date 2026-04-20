@@ -91,10 +91,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
             const getCellBgClass = (): string => {
               if (isSelected) return 'bg-pastel-400';
               if (!isCurrentMonth) return 'bg-pastel-50';
-              if (dayEvents.length > 0) {
-                const cat = dayEvents[0].category;
-                return getCategoryBgColor(cat) || 'bg-pastel-100';
-              }
+              if (dayEvents.length > 0) return 'bg-yellow-100'; // '카피' 색상 고정
               return '';
             };
 
@@ -143,7 +140,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                       {dayEvents.slice(0, 1).map((event, i) => (
                         <div
                           key={i}
-                          className="bg-pastel-200 text-pastel-700 px-0.5 rounded truncate"
+                          className={`${getCategoryBgColor(event.category) || 'bg-pastel-200'} text-pastel-700 px-0.5 rounded truncate`}
                           style={{ fontSize: '9px' }}
                         >
                           {event.title.substring(0, 5)}
