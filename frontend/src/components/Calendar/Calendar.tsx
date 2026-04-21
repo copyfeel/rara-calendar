@@ -181,10 +181,10 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
     const swipePercentage = absDragX / containerWidth * 100;
     const velocity = absDragX / elapsed; // px/ms
 
-    // 플릭 감지: 빠른 속도(0.4px/ms 이상) + 최소 이동 거리(20px 이상)
-    const isFlick = velocity > 0.4 && absDragX > 20;
-    // 드래그 거리 70% 이상
-    const isSufficientDrag = swipePercentage >= 70;
+    // 플릭 감지: 빠른 속도(0.3px/ms 이상) + 최소 이동 거리(15px 이상)
+    const isFlick = velocity > 0.3 && absDragX > 15;
+    // 드래그 거리 50% 이상 (iOS 기본 임계값)
+    const isSufficientDrag = swipePercentage >= 50;
 
     setIsSnapping(true);
 
@@ -210,9 +210,9 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
       onMonthChange(newDate);
     }
 
-    // 원위치 또는 다음 달로 1초 애니메이션
+    // 원위치 또는 다음 달로 애니메이션 (iOS 기본 0.35초)
     setDragX(0);
-    setTimeout(() => setIsSnapping(false), 1000);
+    setTimeout(() => setIsSnapping(false), 350);
   };
 
   // 캐로셀 컨테이너 transform 계산
@@ -234,7 +234,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
         style={{
           display: 'flex',
           transform: carouselTransform,
-          transition: shouldTransition ? 'transform 1s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+          transition: shouldTransition ? 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
         }}
       >
         {renderMonthGrid(prevMonth)}
