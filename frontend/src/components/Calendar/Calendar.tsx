@@ -14,7 +14,7 @@ const getCategoryBgColor = (category: string | null | undefined): string => {
   if (!category) return '';
   switch (category) {
     case '업무':
-      return 'bg-green-300';
+      return 'bg-green-200';
     case '카피':
       return 'bg-indigo-200';
     case 'Event':
