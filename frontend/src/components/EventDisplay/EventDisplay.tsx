@@ -1,7 +1,75 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { getTodayDate, getRelativeDateString } from '../../utils/dateHelper';
 import type { Event } from '../../types/event';
+
+const EMPTY_QUOTES = [
+  '예주야, 인생 짧다! 하고 싶은거 하고 살아',
+  '우리가 가진 귀중한 자원은 시간이다',
+  '실패를 두려워하면 멀리 갈 수 없다',
+  '작은 일도 잊지 못할 추억으로 만들자',
+  '변명으로 사과를 망치지 마라',
+  '성공하지 못했다면 충분히 실패하지 않았다는 뜻이다',
+  '무언가에 투자하기 전에, 그것을 이해하기 위해 시간을 투자해라',
+  '작은 비용에 주의해라, 작은 누수가 큰 배를 가라앉힌다',
+  '모른다는 것은 부끄러운 일이 아니다, 배우려 하지 않는 것이 더 부끄러운 일이다',
+  "Don't just live a life; build one.",
+  '관심을 두지 않으면 모든 것은 잊혀진다',
+  '기본에 충실하면 흔들리지 않는다',
+  '인사만 잘해도 공짜 떡이 생긴다',
+  '이 또한 지나가리라',
+  '소통은 상대를 이해하는 마음에서 시작된다',
+  '매너가 사람을 만든다',
+  '사랑 받고 싶다면 사랑해라, 그리고 사랑스럽게 행동해라',
+  '내일 죽을 것처럼 살아라',
+  '성찰하지 않는 삶은 살 가치가 없다',
+  '삶은 매 순간 내리는 선택들의 결과다',
+  '친구라면 친구의 결점을 참고 견뎌야 한다',
+  '아이는 말이 아니라 행동으로 보고 배운다',
+  '부모가 삶으로 보여주는 행동이 최고의 교육이다',
+  '사랑은 가정에서 시작된다',
+  '가족들이 서로 맺어져 하나가 되어 있다는 것은 정말 행복이다',
+  '삶은 끊임없는 배움이다',
+  '배우는 것은 평생 지속되는 즐거움이다',
+  '독서를 통해 사고를 넓혀라',
+  '작은 습관이 큰 변화를 만든다',
+  '인간관계는 넓이가 아니라 깊이다',
+  '많은 친구를 두기보다, 진실한 친구 한 명을 얻는 것이 더 큰 행복이다',
+  '내 뒤에서 나를 말하는 사람보다, 내 옆에서 조용히 지켜주는 사람을 기억해라',
+  '자기 자신에게 투자하라',
+  '위험은 모를 때 생긴다',
+  '겉으로 보이는 가격만 보지말고 진짜 가치를 알아 보는 눈이 필요하다',
+  '오늘 누군가 그늘에 앉아 있을 수 있는 것은 오래전에 누군가 나무를 심었기 때문이다',
+  '말만 하지 말고 뭐라도 하자',
+  '어제는 지나갔고 내일은 아직 오지 않았다. 우리에게는 오늘만 있습니다. 자, 시작해 보자!',
+  '시간이 부족하다고 탓하지말고 남은 시간에 최선을 다하자',
+  '오늘 걷지 않으면 내일은 뛰어야 한다',
+  '인생이란 공평하지 않을 때가 많다, 이 사실에 익숙해져라',
+  '인생이 공평하지 않다는 것이 당연하다는 것을 인정한 뒤 마음이 편안해졌다',
+  '인생에는 되감기 버튼이 없다',
+  "Life is not fair; get used to it",
+  "It's not that I'm so smart, It's just that I stay with problems longer.",
+  'Stay hungry, stay foolish',
+  '남의 인생을 대신 살지 말아라',
+  '비교는 행복의 도둑이다',
+  '정직은 최고의 전략이다',
+  '네가 사랑하는 일을 찾아라, 그러면 평생 단 하루도 일하지 않는 기분으로 살게 될 것이다',
+  '오늘의 선택이 내일의 너를 만든다',
+];
+
+// 20자 이상이면 절반 지점 근처 공백/쉼표에서 줄바꿈
+const formatQuote = (text: string): string[] => {
+  if (text.length < 20) return [text];
+  const mid = Math.ceil(text.length / 2);
+  let breakPoint = mid;
+  for (let i = mid; i >= mid - 8 && i > 0; i--) {
+    if (text[i] === ' ' || text[i] === ',') {
+      breakPoint = i + 1;
+      break;
+    }
+  }
+  return [text.substring(0, breakPoint).trim(), text.substring(breakPoint).trim()];
+};
 
 const getCategoryColor = (category: string): string => {
   switch (category) {
@@ -35,6 +103,12 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
   const [hideBottomBar, setHideBottomBar] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // 날짜 바뀔 때마다 랜덤 문구 선택
+  const randomQuote = useMemo(() => {
+    const idx = Math.floor(Math.random() * EMPTY_QUOTES.length);
+    return EMPTY_QUOTES[idx];
+  }, [selectedDate]);
 
   // 모바일 전용: 스크롤 감지 → 하단 바 자동 숨김/표시
   useEffect(() => {
@@ -129,8 +203,15 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
       >
         <div className="p-4 space-y-3 pb-24">
           {selectedEvents.length === 0 ? (
-            <div className="text-center text-pastel-400 py-6">
-              <p>등록된 일정이 없습니다</p>
+            <div className="flex items-center justify-center h-full min-h-32 px-6 text-center">
+              <p className="text-pastel-400 text-sm leading-relaxed">
+                {formatQuote(randomQuote).map((line, i) => (
+                  <span key={i}>
+                    {line}
+                    {i < formatQuote(randomQuote).length - 1 && <br />}
+                  </span>
+                ))}
+              </p>
             </div>
           ) : (
             selectedEvents.map(event => (
