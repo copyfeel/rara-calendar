@@ -79,6 +79,18 @@ export const getNextDaysEvents = (events: any[], days: number = 10) => {
   }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
+// 오늘 기준 이전 N일 ~ 이후 N일 범위의 일정 반환
+export const getRangedEvents = (events: any[], pastDays: number = 30, futureDays: number = 30) => {
+  const today = dayjs();
+  const startDate = today.subtract(pastDays, 'day').startOf('day');
+  const endDate = today.add(futureDays, 'day').endOf('day');
+
+  return events.filter(event => {
+    const eventDate = dayjs(event.date);
+    return eventDate.isBetween(startDate, endDate, null, '[]');
+  }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+};
+
 // 음력 변환 함수 (KoreanLunarCalendar - 99% 정확도)
 import KoreanLunarCalendar from 'korean-lunar-calendar';
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useEventStore } from '../../store/eventStore';
-import { getNextDaysEvents, getKoreanDayOfWeek } from '../../utils/dateHelper';
+import { getRangedEvents, getKoreanDayOfWeek } from '../../utils/dateHelper';
 
 interface TodoListProps {
   onClose: () => void;
@@ -9,37 +9,61 @@ interface TodoListProps {
   isPC?: boolean;
 }
 
-const CLOSE_THRESHOLD = 80; // 80px 이상 드래그하면 닫힘
+const CLOSE_THRESHOLD = 80;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const STORAGE_KEY = 'todo-completed';
 
 const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDateSelect, isPC = false }) => {
   const { events, setSelectedDate } = useEventStore();
-  const [completedEvents, setCompletedEvents] = useState<Set<string>>(new Set());
+
+  // 체크 상태: Map<eventId, 체크한 타임스탬프>
+  const [completedEvents, setCompletedEvents] = useState<Map<string, number>>(new Map());
 
   // ── 슬라이드 상태 ──
-  const [visible, setVisible] = useState(false);       // 열림/닫힘 애니메이션
-  const [dragY, setDragY] = useState(0);               // 드래그 이동량(px)
-  const [isDragging, setIsDragging] = useState(false); // 드래그 진행 중
-  const dragStartY = useRef(0);                        // 드래그 시작 Y 위치
+  const [visible, setVisible] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
 
-  const upcomingEvents = getNextDaysEvents(events, 30);
+  // 이전 30일 ~ 이후 30일 일정
+  const rangedEvents = getRangedEvents(events, 30, 30);
 
-  // 마운트 후 슬라이드 업 시작
+  // 마운트 시: localStorage에서 체크 상태 로드 + 하루 지난 항목 자동 제거
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const entries: [string, number][] = JSON.parse(saved);
+        const now = Date.now();
+        const valid = new Map(entries.filter(([, ts]) => now - ts < ONE_DAY_MS));
+        setCompletedEvents(valid);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(valid.entries())));
+      }
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
-  // ── 닫기 (슬라이드 다운 후 언마운트) ──
+  // ── 닫기 ──
   const handleClose = () => {
     setDragY(0);
     setVisible(false);
     setTimeout(onClose, 280);
   };
 
-  const handleToggleComplete = (eventId: string) => {
-    const next = new Set(completedEvents);
-    if (next.has(eventId)) next.delete(eventId);
-    else next.add(eventId);
+  // 체크 토글: 체크 시 타임스탬프 저장, 해제 시 제거
+  const handleToggleComplete = (e: React.MouseEvent, eventId: string) => {
+    e.stopPropagation();
+    const next = new Map(completedEvents);
+    if (next.has(eventId)) {
+      next.delete(eventId);
+    } else {
+      next.set(eventId, Date.now());
+    }
     setCompletedEvents(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next.entries())));
   };
 
   const handleEventClick = (event: typeof events[0]) => {
@@ -58,40 +82,43 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
   const handleDragMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
     const delta = e.touches[0].clientY - dragStartY.current;
-    // 위로는 당기지 않음 (0 이하 클램프)
     setDragY(Math.max(0, delta));
   };
 
   const handleDragEnd = () => {
     setIsDragging(false);
     if (dragY >= CLOSE_THRESHOLD) {
-      // 임계값 초과 → 닫기
       handleClose();
     } else {
-      // 미달 → 원위치 복귀
       setDragY(0);
     }
   };
 
   // ── 패널 transform / transition ──
   const panelTransform = isDragging
-    ? `translateY(${dragY}px)`           // 드래그 중: 실시간 이동
+    ? `translateY(${dragY}px)`
     : visible
-      ? 'translateY(0)'                  // 열림 상태
-      : 'translateY(100%)';              // 닫힘 애니메이션
+      ? 'translateY(0)'
+      : 'translateY(100%)';
 
   const panelTransition = isDragging
-    ? 'none'                             // 드래그 중엔 transition 끔 (즉각 반응)
+    ? 'none'
     : 'transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
-  // 최대 높이: 화면 하단 ~ 캘린더 하단
   const maxHeight = calendarBottom > 0
     ? `${window.innerHeight - calendarBottom}px`
     : '50vh';
 
+  // 하루 지난 체크 항목은 표시에서 제외
+  const visibleEvents = rangedEvents.filter(event => {
+    const checkedAt = completedEvents.get(event.id);
+    if (checkedAt === undefined) return true;           // 체크 안 됨 → 표시
+    return Date.now() - checkedAt < ONE_DAY_MS;        // 체크 후 하루 안 → 취소선 표시
+  });
+
   return (
     <>
-      {/* 반투명 오버레이 – 전체 화면, 클릭하면 닫힘 */}
+      {/* 반투명 오버레이 */}
       <div
         className="todo-overlay fixed inset-0 bg-black/20 z-40"
         onClick={handleClose}
@@ -110,7 +137,7 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
           transition: panelTransition,
         }}
       >
-        {/* ── 헤더 + 드래그 핸들 (터치로 아래로 당겨 닫기) ── */}
+        {/* 헤더 + 드래그 핸들 */}
         <div
           className="sticky top-0 z-10 flex-shrink-0 bg-white border-b border-pastel-100 px-4 py-3 flex items-center justify-between relative select-none"
           style={{ cursor: 'grab', touchAction: 'none' }}
@@ -118,14 +145,12 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
           onTouchMove={handleDragMove}
           onTouchEnd={handleDragEnd}
         >
-          {/* 핸들 바 (드래그 힌트) */}
           <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-pastel-300 rounded-full" />
 
           <h2 className="text-sm font-semibold text-pastel-700 mt-1">
-            오늘부터 30일 일정
+            30일 전 ~ 앞으로 30일 일정
           </h2>
 
-          {/* ❶ X 버튼으로 닫기 */}
           <button
             onClick={handleClose}
             className="p-1.5 hover:bg-pastel-100 rounded-lg transition"
@@ -137,46 +162,44 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
           </button>
         </div>
 
-        {/* ── 일정 리스트 (스크롤 가능) ── */}
+        {/* 일정 리스트 */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          {upcomingEvents.length === 0 ? (
+          {visibleEvents.length === 0 ? (
             <div className="py-10 text-center text-pastel-400 text-sm">
-              예정된 일정이 없습니다
+              일정이 없습니다
             </div>
           ) : (
             <div className="divide-y divide-pastel-100">
-              {upcomingEvents.map(event => (
-                <div
-                  key={event.id}
-                  className="px-4 py-3 hover:bg-pastel-50 transition flex items-center gap-3 cursor-pointer"
-                  onClick={() => handleEventClick(event)}
-                >
-                  <input
-                    type="checkbox"
-                    checked={completedEvents.has(event.id)}
-                    onChange={() => handleToggleComplete(event.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className={`text-sm font-medium truncate ${
-                        completedEvents.has(event.id)
-                          ? 'line-through text-pastel-400'
-                          : 'text-pastel-700'
-                      }`}
-                    >
-                      {event.title}
-                    </div>
-                    <div className="text-xs text-pastel-400 mt-0.5">
-                      {event.date} {getKoreanDayOfWeek(event.date)}
+              {visibleEvents.map(event => {
+                const isChecked = completedEvents.has(event.id);
+                return (
+                  <div
+                    key={event.id}
+                    className="px-4 py-3 hover:bg-pastel-50 transition flex items-center gap-3 cursor-pointer"
+                    onClick={() => handleEventClick(event)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) => handleToggleComplete(e as unknown as React.MouseEvent, event.id)}
+                      onClick={(e) => handleToggleComplete(e, event.id)}
+                      className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm font-medium truncate ${
+                        isChecked ? 'line-through text-pastel-300' : 'text-pastel-700'
+                      }`}>
+                        {event.title}
+                      </div>
+                      <div className="text-xs text-pastel-400 mt-0.5">
+                        {event.date} {getKoreanDayOfWeek(event.date)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
-          {/* iOS Safe Area 여백 */}
           <div style={{ height: 'env(safe-area-inset-bottom, 0px)' }} />
         </div>
       </div>
