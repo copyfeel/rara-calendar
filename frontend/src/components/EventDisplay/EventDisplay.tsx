@@ -305,12 +305,26 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
   const handlePrevEvent = () => {
     if (previousEventDate) {
       setSelectedDate(previousEventDate);
+      if (onMonthChange) {
+        const cur = new Date(selectedDate);
+        const target = new Date(previousEventDate);
+        if (cur.getFullYear() !== target.getFullYear() || cur.getMonth() !== target.getMonth()) {
+          onMonthChange(target);
+        }
+      }
     }
   };
 
   const handleNextEvent = () => {
     if (nextEventDate) {
       setSelectedDate(nextEventDate);
+      if (onMonthChange) {
+        const cur = new Date(selectedDate);
+        const target = new Date(nextEventDate);
+        if (cur.getFullYear() !== target.getFullYear() || cur.getMonth() !== target.getMonth()) {
+          onMonthChange(target);
+        }
+      }
     }
   };
 
