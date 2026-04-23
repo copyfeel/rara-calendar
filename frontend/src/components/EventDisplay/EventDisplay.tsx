@@ -152,20 +152,64 @@ const EMPTY_QUOTES = [
   '속마음은 쉽게 드러내지 마라',
   '나는 해야 한다, 그러므로 나는 할 수 있다',
   '항상 갈망하라, 늘 우직하게 도전하라',
+  '기본만 해도 훌륭하다',
+  '건강할때 행복을 알았더라면, 병들었을때 후회하지 않았을 것이다',
+  '건강을 잃으면 전부를 잃는 것이다',
+  '잠은 최고의 명약이다',
+  '운동은 모든 행복의 열쇠다',
+  '마음의 상처는 몸의 상처 보다 오래 간다',
+  '건강은 행복의 첫 번째 조건이다',
+  '건강은 우리가 가진 가장 큰 재산이다',
+  '건강할때 행복을 느끼지 못한다면, 그것은 가장 큰 불행이다',
+  '건강은 돈으로 살 수 없지만, 돈은 건강으로 벌 수 있다',
+  '건강한 사람은 천 가지 소원이 있고, 병든 사람은 한 가지 소원 밖에 없다',
+  '운동은 하루를 짧게 하지만 인생을 길게 해준다',
+  '운동을 하지 않으면 어느 순간 당신은 고장날 것이다',
+  '말하기 전에 한 번 더 생각한다',
+  '물을 마시지 않으면 피부가 늙고, 잠을 자지 않으면 눈이 늙고, 책을 읽지 않으면 생각이 늙는다, 그리고 사람을 만나지 않으면 마음이 늙는다',
+  '필요 없는 물건은 쌓아두지 않는다',
+  '몸이 보내는 휴식 신호를 무시하지 않는다',
+  '균형 잡힌 식단은 건강의 기초다',
+  '몸이 보내는 작은 신호를 무시하지 마라',
+  '병은 갑자기 오지만, 건강은 천천히 온다',
+  '작은 예의가 큰 차이를 만든다',
+  '힘들수록 기본으로 돌아가라',
+  '가까운 사람일수록 함부로 대하지마라',
+  '살기 위해 먹을 것인가, 먹기 위해 살것인가',
+  '평범한 하루가 소중함을 잊지말자',
+  '음악은 영혼의 향연이다',
+  '예술은 우리에게 진실을 깨달게 하는 거짓이다',
+  '세계적이려면 가장 민족적이어야 하지 않을까?',
+  '나는 작업할 때 예술에 대해 생각하지 않는다, 삶에 대해 생각한다',
+  '예술은 당신이 무엇을 보는가가 아니라, 어떻게 보는가에 관한 것이다',
+  '예술은 생각의 눈이다',
 ];
 
-// 20자 이상이면 절반 지점 근처 공백/쉼표에서 줄바꿈
+// 줄바꿈 규칙: 구두점(, . ! ?) 뒤에서 줄바꿈, 한 줄 최대 37자
 const formatQuote = (text: string): string[] => {
-  if (text.length < 20) return [text];
-  const mid = Math.ceil(text.length / 2);
-  let breakPoint = mid;
-  for (let i = mid; i >= mid - 8 && i > 0; i--) {
-    if (text[i] === ' ' || text[i] === ',') {
-      breakPoint = i + 1;
-      break;
+  const breakChars = new Set([',', '.', '!', '?']);
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    currentLine += char;
+
+    const isBreakChar = breakChars.has(char);
+    const isLast = i === text.length - 1;
+
+    if (!isLast && (isBreakChar || currentLine.length >= 37)) {
+      lines.push(currentLine.trim());
+      currentLine = '';
+      // 구두점 뒤 공백 스킵
+      if (isBreakChar && i + 1 < text.length && text[i + 1] === ' ') {
+        i++;
+      }
     }
   }
-  return [text.substring(0, breakPoint).trim(), text.substring(breakPoint).trim()];
+
+  if (currentLine.trim()) lines.push(currentLine.trim());
+  return lines.filter(l => l.length > 0);
 };
 
 const getCategoryColor = (category: string): string => {
@@ -302,10 +346,10 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
           {selectedEvents.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-32 px-6 text-center">
               <p className="text-pastel-400 text-sm leading-relaxed">
-                {formatQuote(randomQuote).map((line, i) => (
+                {formatQuote(randomQuote).map((line, i, arr) => (
                   <span key={i}>
                     {line}
-                    {i < formatQuote(randomQuote).length - 1 && <br />}
+                    {i < arr.length - 1 && <br />}
                   </span>
                 ))}
               </p>
