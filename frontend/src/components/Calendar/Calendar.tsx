@@ -7,7 +7,16 @@ import {
   solarToLunar,
   getLunarDisplayDays,
 } from '../../utils/dateHelper';
+import type { Event } from '../../types/event';
 import './Calendar.css';
+
+const applyEventOrder = (dateEvents: Event[], order: string[] | undefined): Event[] => {
+  if (!order || order.length === 0) return dateEvents;
+  const orderMap = new Map(order.map((id, i) => [id, i]));
+  return [...dateEvents].sort((a, b) =>
+    (orderMap.get(a.id) ?? Infinity) - (orderMap.get(b.id) ?? Infinity)
+  );
+};
 
 // 카테고리별 배경색 반환
 const getCategoryBgColor = (category: string | null | undefined): string => {
@@ -36,7 +45,7 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
-  const { events, selectedDate, setSelectedDate } = useEventStore();
+  const { events, eventOrder, selectedDate, setSelectedDate } = useEventStore();
   const [touchStartX, setTouchStartX] = useState<number>(0);
   const [dragX, setDragX] = useState(0);
   const [isSnapping, setIsSnapping] = useState(false);
@@ -71,7 +80,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
     const getEventsForDate = (day: number | null) => {
       if (!day) return [];
       const dateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      return events.filter(event => event.date === dateStr);
+      return applyEventOrder(events.filter(event => event.date === dateStr), eventOrder[dateStr]);
     };
 
     return (

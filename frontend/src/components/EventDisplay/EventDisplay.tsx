@@ -1,7 +1,16 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { getTodayDate, getRelativeDateString } from '../../utils/dateHelper';
 import type { Event } from '../../types/event';
+
+// 저장된 순서로 날짜 이벤트 정렬
+const applyEventOrder = (dateEvents: Event[], order: string[] | undefined): Event[] => {
+  if (!order || order.length === 0) return dateEvents;
+  const orderMap = new Map(order.map((id, i) => [id, i]));
+  return [...dateEvents].sort((a, b) =>
+    (orderMap.get(a.id) ?? Infinity) - (orderMap.get(b.id) ?? Infinity)
+  );
+};
 
 const EMPTY_QUOTES = [
   '예주야, 인생 짧다! 하고 싶은거 하고 살아',
@@ -245,11 +254,91 @@ interface EventDisplayProps {
 }
 
 const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTodoList, onMonthChange, isPC = false }) => {
-  const { events, selectedDate, setSelectedDate, deleteEvent } = useEventStore();
+  const { events, eventOrder, selectedDate, setSelectedDate, deleteEvent, reorderEvents } = useEventStore();
   const today = getTodayDate();
   const [hideBottomBar, setHideBottomBar] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // 드래그 상태
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dragIndexRef = useRef<number | null>(null);
+  const dragOverIndexRef = useRef<number | null>(null);
+
+  // ref와 state 동기화
+  useEffect(() => { dragIndexRef.current = dragIndex; }, [dragIndex]);
+  useEffect(() => { dragOverIndexRef.current = dragOverIndex; }, [dragOverIndex]);
+
+  // 터치 드래그: document 레벨 리스너 (passive: false 필요)
+  useEffect(() => {
+    if (dragIndex === null) return;
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const touchY = e.touches[0].clientY;
+      for (let i = 0; i < itemRefs.current.length; i++) {
+        const el = itemRefs.current[i];
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (touchY >= rect.top && touchY <= rect.bottom) {
+          setDragOverIndex(i);
+          break;
+        }
+      }
+    };
+
+    const onTouchEnd = () => {
+      const from = dragIndexRef.current;
+      const to = dragOverIndexRef.current;
+      if (from !== null && to !== null && from !== to) {
+        reorderEvents(selectedDate, from, to);
+      }
+      setDragIndex(null);
+      setDragOverIndex(null);
+    };
+
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+    return () => {
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [dragIndex, selectedDate, reorderEvents]);
+
+  // HTML5 드래그 핸들러
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    e.dataTransfer.effectAllowed = 'move';
+    setDragIndex(index);
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDrop = useCallback((index: number) => {
+    const from = dragIndexRef.current;
+    if (from !== null && from !== index) {
+      reorderEvents(selectedDate, from, index);
+    }
+    setDragIndex(null);
+    setDragOverIndex(null);
+  }, [selectedDate, reorderEvents]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  }, []);
+
+  // 터치 시작 (핸들에서만)
+  const handleTouchStartHandle = useCallback((e: React.TouchEvent, index: number) => {
+    e.stopPropagation();
+    setDragIndex(index);
+    setDragOverIndex(index);
+  }, []);
 
   // 날짜 바뀔 때마다 랜덤 문구 선택
   const randomQuote = useMemo(() => {
@@ -291,7 +380,10 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
     };
   }, [isPC]);
 
-  const selectedEvents = events.filter(event => event.date === selectedDate);
+  const selectedEvents = applyEventOrder(
+    events.filter(event => event.date === selectedDate),
+    eventOrder[selectedDate]
+  );
   const previousEventDate = events
     .filter(event => event.date < selectedDate)
     .map(e => e.date)
@@ -375,14 +467,44 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
               </p>
             </div>
           ) : (
-            selectedEvents.map(event => (
+            selectedEvents.map((event, index) => (
               <div
                 key={event.id}
-                className="bg-white p-3 rounded-lg border border-pastel-200 hover:shadow-md transition cursor-pointer"
-                onClick={() => onOpenEventEditor(event)}
+                ref={el => { itemRefs.current[index] = el; }}
+                data-event-index={String(index)}
+                className={[
+                  'bg-white p-3 rounded-lg border transition',
+                  dragIndex === index ? 'opacity-40' : '',
+                  dragOverIndex === index && dragIndex !== index
+                    ? 'border-pastel-400 shadow-lg ring-1 ring-pastel-300'
+                    : 'border-pastel-200 hover:shadow-md',
+                ].join(' ')}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={() => handleDrop(index)}
+                onClick={() => dragIndex === null && onOpenEventEditor(event)}
+                style={{ cursor: dragIndex !== null ? 'default' : 'pointer' }}
               >
-                <div className="flex justify-between items-start gap-2">
-                  <div className="flex-1">
+                <div className="flex items-start gap-2">
+                  {/* 드래그 핸들 */}
+                  <div
+                    draggable
+                    className="flex-shrink-0 pt-1 text-pastel-300 hover:text-pastel-500 cursor-grab active:cursor-grabbing select-none"
+                    style={{ touchAction: 'none' }}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onTouchStart={(e) => handleTouchStartHandle(e, index)}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 12 16" fill="currentColor">
+                      <circle cx="3" cy="3" r="1.5"/>
+                      <circle cx="9" cy="3" r="1.5"/>
+                      <circle cx="3" cy="8" r="1.5"/>
+                      <circle cx="9" cy="8" r="1.5"/>
+                      <circle cx="3" cy="13" r="1.5"/>
+                      <circle cx="9" cy="13" r="1.5"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
                     <div className={`font-semibold ${getCategoryColor(event.category)}`}>{event.title}</div>
                     {event.useTime && (
                       <div className="text-xs text-pastel-500 mt-1">
@@ -398,7 +520,7 @@ const EventDisplay: React.FC<EventDisplayProps> = ({ onOpenEventEditor, onOpenTo
                       e.stopPropagation();
                       handleDeleteEvent(event.id);
                     }}
-                    className="p-1 hover:bg-red-100 rounded transition"
+                    className="p-1 hover:bg-red-100 rounded transition flex-shrink-0"
                     title="삭제"
                   >
                     <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">

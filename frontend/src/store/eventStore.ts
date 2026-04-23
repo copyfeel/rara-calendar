@@ -14,6 +14,7 @@ interface EventStore {
   selectedDate: string;
   currentUserId: string | null;
   firestoreUnsubscribe: (() => void) | null;
+  eventOrder: Record<string, string[]>; // date → ordered event IDs
 
   // Event 관련 함수
   addEvent: (event: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -21,6 +22,7 @@ interface EventStore {
   deleteEvent: (id: string) => void;
   getEventsByDate: (date: string) => Event[];
   getEventsByMonth: (year: number, month: number) => Event[];
+  reorderEvents: (date: string, fromIndex: number, toIndex: number) => void;
 
   // 날짜 관련 함수
   setSelectedDate: (date: string) => void;
@@ -50,6 +52,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
   selectedDate: new Date().toISOString().split('T')[0],
   currentUserId: null,
   firestoreUnsubscribe: null,
+  eventOrder: {},
 
   addEvent: (event) => {
     const newEvent: Event = {
@@ -131,14 +134,36 @@ export const useEventStore = create<EventStore>((set, get) => ({
     },
   })),
 
+  reorderEvents: (date, fromIndex, toIndex) => {
+    const { events, eventOrder } = get();
+    const dateEvents = events.filter(e => e.date === date);
+    const currentOrder = eventOrder[date] || dateEvents.map(e => e.id);
+
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 ||
+        fromIndex >= currentOrder.length || toIndex >= currentOrder.length) return;
+
+    const newOrder = [...currentOrder];
+    const [moved] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, moved);
+
+    const newEventOrder = { ...eventOrder, [date]: newOrder };
+    set({ eventOrder: newEventOrder });
+    try {
+      localStorage.setItem('raraCalendarEventOrder', JSON.stringify(newEventOrder));
+    } catch {}
+  },
+
   loadFromStorage: () => {
     try {
       const stored = localStorage.getItem('raraCalendarData');
+      const orderStored = localStorage.getItem('raraCalendarEventOrder');
       if (stored) {
         const { events, settings } = JSON.parse(stored);
+        const eventOrder = orderStored ? JSON.parse(orderStored) : {};
         set({
           events: events || [],
           settings: settings || getInitialSettings(),
+          eventOrder,
         });
       }
     } catch (error) {
