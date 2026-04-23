@@ -151,7 +151,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
             <label className="block text-sm font-medium text-pastel-700 mb-1">
               제목
             </label>
-            <div className={`text-sm font-semibold mb-2 px-1 rounded ${getCategoryColor(category)} ${category === '업무' ? 'bg-blue-100' : ''}`}>
+            <div className={`text-sm font-semibold mb-2 ${getCategoryColor(category)}`}>
               {title || '미리보기'}
             </div>
             <input
@@ -159,7 +159,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="일정 제목을 입력하세요"
-              className={`w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400 ${category === '업무' ? 'bg-blue-100' : ''}`}
+              className="w-full px-3 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
             />
           </div>
 
