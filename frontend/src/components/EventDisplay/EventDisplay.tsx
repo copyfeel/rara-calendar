@@ -76,7 +76,7 @@ const EMPTY_QUOTES = [
   '사랑은 같은 방향을 바라보는 것이고, 함께하려는 의지다',
   "If you're a bird, I'm a bird",
   '사람은 각자 다른 빛깔을 가지고 있다',
-  'Sometimes you have to take a leap and trust the universe, 가끔은 과감하게 뛰어들고 인생을 믿어야 해',
+  'Sometimes, you have to take a leap and trust the universe, 가끔은 과감하게 뛰어들고 인생을 믿어야 해',
   'You have to decide your life.',
   'Your life is here now.',
   '옳은 일을 하는 것은 절대 틀리지 않는다',
