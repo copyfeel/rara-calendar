@@ -38,14 +38,14 @@ const EMPTY_QUOTES = [
   '내 뒤에서 나를 말하는 사람보다, 내 옆에서 조용히 지켜주는 사람을 기억해라',
   '자기 자신에게 투자하라',
   '위험은 모를 때 생긴다',
-  '겉으로 보이는 가격만 보지말고 진짜 가치를 알아 보는 눈이 필요하다',
-  '오늘 누군가 그늘에 앉아 있을 수 있는 것은 오래전에 누군가 나무를 심었기 때문이다',
+  '겉으로 보이는 가격만 보지말고, 진짜 가치를 알아 보는 눈이 필요하다',
+  '오늘 나무 그늘에 앉아 있을 수 있는 것은, 오래전에 누군가 나무를 심었기 때문이다',
   '말만 하지 말고 뭐라도 하자',
-  '어제는 지나갔고 내일은 아직 오지 않았다. 우리에게는 오늘만 있습니다. 자, 시작해 보자!',
+  '어제는 지나갔고 내일은 아직 오지 않았다. 지금 우리에게는 오늘만 있습니다',
   '시간이 부족하다고 탓하지말고 남은 시간에 최선을 다하자',
   '오늘 걷지 않으면 내일은 뛰어야 한다',
   '인생이란 공평하지 않을 때가 많다, 이 사실에 익숙해져라',
-  '인생이 공평하지 않다는 것이 당연하다는 것을 인정한 뒤 마음이 편안해졌다',
+  '인생이 공평하지 않다는 것이 당연하다는 것을 인정한 뒤, 마음이 편안해졌다',
   '인생에는 되감기 버튼이 없다',
   "Life is not fair; get used to it",
   "It's not that I'm so smart, It's just that I stay with problems longer.",
@@ -90,7 +90,7 @@ const EMPTY_QUOTES = [
   '자연은 우리를 위한 것이 아니라 우리의 일부다',
   '언제 어디서나 진실하게 행동해라',
   '함께 걸어도 누구도 너의 길을 대신 갈 수 없다',
-  '대지를 잘 보살펴라, 그것은 조상으로부터 물려받은 것이 아니라 우리의 후손으로부터 빌려온 것이다',
+  '대지를 잘 보살펴라, 그것은 조상으로부터 물려받은 것이 아나라, 우리의 후손으로부터 빌려온 것이다',
   '내 뒤에서 걷지 말고 내 옆에서 걸어라, 우리가 하나가 되도록',
   '누구에게도 의지하지 말고 혼자의 힘으로 행하라',
   '울기를 두려워 하지 마라, 눈물은 마음의 아픔을 씻어내는 약이다',
@@ -115,10 +115,10 @@ const EMPTY_QUOTES = [
   '진실을 말하되, 다른 사람에게 도움이 되도록 말해라',
   'Follow the rhythms of Nature',
   '인생의 여정을 즐기되, 흔적을 남기지 마라',
-  '진실된 말은 무거운 돌처럼 가슴 깊이 가라앉기 때문에 결코 잊어버리지 않는다',
+  '진실된 말은 무거운 돌처럼 가슴 깊이 가라 앉기 때문에, 결코 잊어 버리지 않는다',
   '말이 없다면 그것도 하나의 답이다',
   '친구란, 내 슬픔을 자기 등에 지고 가는 사람이다',
-  '너무 빨리 달려서 행여나 내 영혼이 따르지 못한다고 생각되면 잠시 멈출 줄 알아야 한다',
+  '너무 빨리 달려서 행여나 내 영혼이 따르지 못한다고 생각되면, 잠시 멈춤줄 알아야 한다',
   '서두르면 놓치는 것이 생긴다',
   '스스로를 비난하는 사람이 될지, 자신을 사랑하는 사람이 될지는 자신의 몫이다',
   '사람의 눈은 혀가 말할 수 없는 것을 말한다',
@@ -129,7 +129,7 @@ const EMPTY_QUOTES = [
   '그렇게 될 일은 결국 그렇게 된다',
   '죽은 말을 타고 있음을 깨닫는다면 당장 내려라',
   '객관적으로 말하는데, 내 주관에 토 달지마',
-  '배움을 얻는 방법은 책을 읽거나 똑똑한 사람들과 함께하는 것이다',
+  '배움을 얻는 방법은 책을 읽거나, 똑똑한 사람들과 함께하는 것이다',
   '마음의 길을 따라 걸어라',
   '삶은 우리의 계획을 따르지 않기 때문에, 오히려 놀라운 일이 가능하다',
   '안되면 될꺼 해라',
@@ -185,26 +185,32 @@ const EMPTY_QUOTES = [
   '예술은 생각의 눈이다',
 ];
 
-// 줄바꿈 규칙: 구두점(, . ! ?) 뒤에서 줄바꿈, 한 줄 최대 37자
+// 줄바꿈 규칙: 구두점 뒤 즉시 줄바꿈, 한글 34자 초과 또는 영어 46자 초과시 줄바꿈
 const formatQuote = (text: string): string[] => {
   const breakChars = new Set([',', '.', '!', '?']);
+  const isKorean = (ch: string) => ch >= '\uAC00' && ch <= '\uD7A3';
+  const isEnglish = (ch: string) => (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
   const lines: string[] = [];
   let currentLine = '';
+  let koreanCount = 0;
+  let englishCount = 0;
 
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
     currentLine += char;
+    if (isKorean(char)) koreanCount++;
+    else if (isEnglish(char)) englishCount++;
 
     const isBreakChar = breakChars.has(char);
     const isLast = i === text.length - 1;
+    const limitReached = koreanCount > 34 || englishCount > 46;
 
-    if (!isLast && (isBreakChar || currentLine.length >= 37)) {
+    if (!isLast && (isBreakChar || limitReached)) {
       lines.push(currentLine.trim());
       currentLine = '';
-      // 구두점 뒤 공백 스킵
-      if (isBreakChar && i + 1 < text.length && text[i + 1] === ' ') {
-        i++;
-      }
+      koreanCount = 0;
+      englishCount = 0;
+      if (isBreakChar && i + 1 < text.length && text[i + 1] === ' ') i++;
     }
   }
 
@@ -216,13 +222,13 @@ const getCategoryColor = (category: string): string => {
   switch (category) {
     case '업무':
       return 'text-green-600';
-    case '카피':
+    case '일상':
       return 'text-yellow-600';
     case 'Event':
       return 'text-orange-600';
     case '가족':
       return 'text-amber-700';
-    case '예주':
+    case '아이':
       return 'text-pink-700';
     case '마님':
       return 'text-red-600';
