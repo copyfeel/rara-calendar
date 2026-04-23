@@ -15,13 +15,13 @@ const getCategoryBgColor = (category: string | null | undefined): string => {
   switch (category) {
     case '업무':
       return 'bg-green-200';
-    case '카피':
+    case '일상':
       return 'bg-indigo-200';
     case 'Event':
       return 'bg-orange-100';
     case '가족':
       return 'bg-stone-200';
-    case '예주':
+    case '아이':
       return 'bg-pink-300';
     case '마님':
       return 'bg-red-100';
@@ -138,7 +138,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                   </div>
                   {isCurrentMonth && (
                     <div className="space-y-0.5">
-                      {dayEvents.slice(0, 1).map((event, i) => (
+                      {dayEvents.slice(0, 2).map((event, i) => (
                         <div
                           key={i}
                           className={`${getCategoryBgColor(event.category) || 'bg-pastel-200'} text-pastel-700 px-0.5 rounded truncate`}
@@ -147,9 +147,9 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                           {event.title.substring(0, 5)}
                         </div>
                       ))}
-                      {dayEvents.length > 1 && (
+                      {dayEvents.length > 2 && (
                         <div className="text-pastel-500 font-semibold" style={{ fontSize: '9px' }}>
-                          +{dayEvents.length - 1}
+                          +{dayEvents.length - 2}
                         </div>
                       )}
                     </div>
