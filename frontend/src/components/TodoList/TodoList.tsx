@@ -10,7 +10,6 @@ interface TodoListProps {
 }
 
 const CLOSE_THRESHOLD = 80;
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const STORAGE_KEY = 'todo-completed';
 
 const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDateSelect, isPC = false }) => {
@@ -28,14 +27,15 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
   // 이전 30일 ~ 이후 30일 일정
   const rangedEvents = getRangedEvents(events, 30, 30);
 
-  // 마운트 시: localStorage에서 체크 상태 로드 + 하루 지난 항목 자동 제거
+  // 마운트 시: localStorage에서 체크 상태 로드 + 범위 밖 항목 자동 제거
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const entries: [string, number][] = JSON.parse(saved);
-        const now = Date.now();
-        const valid = new Map(entries.filter(([, ts]) => now - ts < ONE_DAY_MS));
+        const rangedIds = new Set(rangedEvents.map(e => e.id));
+        // ±30일 범위 안에 있는 이벤트의 체크 상태만 유지
+        const valid = new Map(entries.filter(([id]) => rangedIds.has(id)));
         setCompletedEvents(valid);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(valid.entries())));
       }
@@ -44,7 +44,7 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
     }
 
     requestAnimationFrame(() => setVisible(true));
-  }, []);
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 닫기 ──
   const handleClose = () => {
@@ -109,12 +109,8 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
     ? `${window.innerHeight - calendarBottom}px`
     : '50vh';
 
-  // 하루 지난 체크 항목은 표시에서 제외
-  const visibleEvents = rangedEvents.filter(event => {
-    const checkedAt = completedEvents.get(event.id);
-    if (checkedAt === undefined) return true;           // 체크 안 됨 → 표시
-    return Date.now() - checkedAt < ONE_DAY_MS;        // 체크 후 하루 안 → 취소선 표시
-  });
+  // ±30일 범위 내 전체 표시 (체크된 항목은 취소선, 범위 벗어나면 자연히 사라짐)
+  const visibleEvents = rangedEvents;
 
   return (
     <>
