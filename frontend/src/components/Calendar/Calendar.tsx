@@ -22,7 +22,7 @@ const applyEventOrder = (dateEvents: Event[], order: string[] | undefined): Even
 const getCategoryStyle = (category: string | null | undefined): { bg: string; text: string } => {
   switch (category) {
     case '업무':
-      return { bg: 'bg-gray-200', text: 'text-gray-700' };
+      return { bg: 'bg-sky-300', text: 'text-sky-900' };
     case '일상':
       return { bg: 'bg-gray-500', text: 'text-white' };
     case 'Event':
