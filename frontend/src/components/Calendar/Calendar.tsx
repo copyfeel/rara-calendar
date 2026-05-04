@@ -18,24 +18,23 @@ const applyEventOrder = (dateEvents: Event[], order: string[] | undefined): Even
   );
 };
 
-// 카테고리별 배경색 반환
-const getCategoryBgColor = (category: string | null | undefined): string => {
-  if (!category) return '';
+// 카테고리별 배경색/글자색 반환
+const getCategoryStyle = (category: string | null | undefined): { bg: string; text: string } => {
   switch (category) {
     case '업무':
-      return 'bg-blue-200';
+      return { bg: 'bg-gray-200', text: 'text-gray-700' };
     case '일상':
-      return 'bg-indigo-200';
+      return { bg: 'bg-gray-500', text: 'text-white' };
     case 'Event':
-      return 'bg-orange-100';
+      return { bg: 'bg-orange-100', text: 'text-pastel-700' };
     case '가족':
-      return 'bg-stone-200';
+      return { bg: 'bg-stone-200', text: 'text-pastel-700' };
     case '아이':
-      return 'bg-pink-300';
+      return { bg: 'bg-pink-300', text: 'text-pastel-700' };
     case '마님':
-      return 'bg-red-100';
+      return { bg: 'bg-red-100', text: 'text-pastel-700' };
     default:
-      return '';
+      return { bg: 'bg-pastel-200', text: 'text-pastel-700' };
   }
 };
 
@@ -147,15 +146,18 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                   </div>
                   {isCurrentMonth && (
                     <div className="space-y-0.5">
-                      {dayEvents.slice(0, 2).map((event, i) => (
-                        <div
-                          key={i}
-                          className={`${getCategoryBgColor(event.category) || 'bg-pastel-200'} text-pastel-700 px-0.5 rounded truncate`}
-                          style={{ fontSize: '9px' }}
-                        >
-                          {event.title.substring(0, 5)}
-                        </div>
-                      ))}
+                      {dayEvents.slice(0, 2).map((event, i) => {
+                        const style = getCategoryStyle(event.category);
+                        return (
+                          <div
+                            key={i}
+                            className={`${style.bg} ${style.text} px-0.5 rounded truncate`}
+                            style={{ fontSize: '9px' }}
+                          >
+                            {event.title.substring(0, 5)}
+                          </div>
+                        );
+                      })}
                       {dayEvents.length > 2 && (
                         <div className="text-pastel-500 font-semibold" style={{ fontSize: '9px' }}>
                           +{dayEvents.length - 2}
