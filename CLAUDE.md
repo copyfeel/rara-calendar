@@ -114,85 +114,89 @@ Rara Calendar 프로젝트를 생성합니다.
 
 ## 🛠 기술 구현 계획
 
-### 기술 스택 (최종 결정)
-- **프론트엔드**: React 18 + Vite + TypeScript
-- **백엔드**: Node.js + Express.js
-- **데이터 저장**: localStorage (클라이언트 측)
-- **스타일링**: Tailwind CSS (파스텔 톤 커스터마이징)
+### 기술 스택 (현재 실제 구성 · 2026-10-31 기준)
+- **프론트엔드**: React 19 + Vite 8 + TypeScript 6
+- **백엔드**: 없음 (서버 코드 없음, 정적 사이트로 배포)
+- **데이터 저장**: Firebase Firestore (로그인 사용자별 실시간 동기화, IndexedDB 오프라인 캐시) + localStorage (로컬 캐시·일정 순서)
+- **인증**: Firebase Auth (이메일/비밀번호)
+- **상태관리**: Zustand
+- **스타일링**: Tailwind CSS 3 (파스텔 그레이톤 커스터마이징, `hoverOnlyWhenSupported`)
 - **날짜 라이브러리**: Day.js
-- **음력 변환**: lunar-calendar 또는 custom 함수
-- **알람**: Web Notifications API + Service Workers (PWA)
+- **음력 변환**: korean-lunar-calendar
+- **알람**: Web Notifications API + Service Worker (`public/sw.js`, PWA)
 - **UI 컴포넌트**: 커스텀 구현 (참고 사진 기반)
 
-### 프로젝트 디렉토리 구조
+### 프로젝트 디렉토리 구조 (실제)
 ```
 rara-calendar/
-├── frontend/                    # React 프론트엔드
+├── frontend/                    # React 앱 (npm workspace)
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Calendar/       # 메인 캘린더 컴포넌트
-│   │   │   ├── EventEditor/    # 일정 입력/편집 모달
+│   │   │   ├── Calendar/       # 메인 캘린더 (Calendar.tsx, Calendar.css)
+│   │   │   ├── EventDisplay/   # 선택 날짜 내용 표시란
+│   │   │   ├── EventEditor/    # 일정 입력/편집 화면
 │   │   │   ├── SearchScreen/   # 검색 화면
-│   │   │   ├── TodoList/       # 투두 리스트 (슬라이드)
+│   │   │   ├── TodoList/       # 투두 리스트 (하단 슬라이드)
 │   │   │   ├── AdminPanel/     # 관리자 화면
 │   │   │   ├── Header/         # 고정 헤더 메뉴바
-│   │   │   └── common/         # 공통 UI 컴포넌트
-│   │   ├── hooks/              # 커스텀 훅
-│   │   │   ├── useEvents.ts    # 일정 데이터 관리
-│   │   │   ├── useLocalStorage.ts
-│   │   │   └── useNotification.ts
-│   │   ├── utils/
-│   │   │   ├── lunar.ts        # 음력 변환 함수
-│   │   │   ├── dateHelper.ts   # 날짜 관련 유틸
-│   │   │   └── formatters.ts   # 포맷팅 함수
-│   │   ├── store/              # 전역 상태관리 (zustand)
-│   │   ├── styles/
-│   │   │   └── globals.css     # 파스텔 톤 정의
-│   │   ├── types/              # TypeScript 타입 정의
+│   │   │   └── Auth/           # 로그인 화면 (LoginScreen.tsx)
+│   │   ├── hooks/              # useLocalStorage.ts, useNotification.ts
+│   │   ├── lib/                # firebase.ts (초기화), firestoreService.ts (CRUD·구독·마이그레이션)
+│   │   ├── store/              # eventStore.ts, authStore.ts (zustand)
+│   │   ├── utils/              # dateHelper.ts
+│   │   ├── styles/             # responsive.css
+│   │   ├── types/              # event.ts, lunar-calendar.d.ts
 │   │   ├── App.tsx
 │   │   └── main.tsx
-│   ├── public/
-│   │   └── manifest.json       # PWA 설정
+│   ├── public/                 # manifest.json, sw.js (PWA)
+│   ├── .env.local              # Firebase 키 (Git 미포함)
 │   ├── package.json
-│   ├── vite.config.ts
-│   └── tsconfig.json
-│
-├── backend/                     # Express 백엔드 (향후 확장)
-│   ├── src/
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   └── server.ts
-│   └── package.json
-│
+│   └── vite.config.ts
+├── .github/workflows/deploy.yml # 빌드 확인용 CI (배포 안 함)
+├── netlify.toml                # Netlify 빌드/헤더 설정
+├── package.json                # 루트 (workspaces: frontend)
 ├── CLAUDE.md
 └── README.md
 ```
 
-### 핵심 데이터 구조 (localStorage)
-```javascript
-// localStorage에 저장될 데이터 구조
-{
-  "events": [
-    {
-      "id": "uuid",
-      "title": "일정 제목",
-      "description": "상세 설명",
-      "date": "2026-04-20",
-      "startTime": "14:00",
-      "endTime": "15:00",
-      "category": "Work|Personal|etc",
-      "alarm": 15,  // 분 단위
-      "createdAt": "2026-04-15T10:00:00Z",
-      "updatedAt": "2026-04-15T10:00:00Z"
-    }
-  ],
-  "settings": {
-    "theme": "pastelGray",
-    "alarmEnabled": true,
-    "fontFamily": "default"
-  }
+### 데이터 저장 구조
+- **Firestore**: `users/{uid}/events/{eventId}` — 로그인 시 `onSnapshot`으로 실시간 구독, 기존 로컬 일정은 `migrateLocalEventsToFirestore`로 이전
+- **localStorage**: `raraCalendarData` (일정·설정 캐시), `raraCalendarEventOrder` (날짜별 일정 순서)
+
+```typescript
+// frontend/src/types/event.ts
+interface Event {
+  id: string;            // uuid
+  title: string;
+  description: string;
+  date: string;          // YYYY-MM-DD
+  startTime: string;     // HH:mm
+  endTime: string;       // HH:mm
+  category: '업무' | '일상' | 'Event' | '가족' | '아이' | '마님';
+  alarm: number;         // 분 단위
+  alarmEnabled?: boolean;
+  useTime?: boolean;
+  useCategory?: boolean;
+  isAllDay?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+interface Settings {
+  theme: 'pastelGray' | 'light' | 'dark';
+  alarmEnabled: boolean;
+  fontFamily: string;
 }
 ```
+
+### 개발 환경 · 배포 워크플로
+- **작업 경로**: `/Users/copy/aistu/workspaces/rara-calendar` (Cursor와 Claude Code가 같은 폴더 공유 → 같은 파일 동시 수정 주의)
+- **브랜치**: `dev`에서 작업 → 확인 후 `main`에 병합 → push 시 Netlify 자동 배포
+- **백업 태그**: `backup-2026-10-31` (작업 환경 정리 전 상태, `943c2d0`)
+- **로컬 실행**: 루트에서 `npm run dev` / 빌드 확인 `npm run build`
+- **배포**: Netlify Git 연동 — 사이트 `rara-todo-calendar` (https://rara-todo-calendar.netlify.app), Firebase 환경변수(`VITE_FIREBASE_*`)는 Netlify에 설정됨
+- **Netlify CLI**: `frontend/`에서 링크됨 (`frontend/.netlify/`, Git 미포함)
+- **CI (GitHub Actions)**: Node 22로 `npm install` + `npm run build`만 확인. lock 파일의 netlify-cli 하위 플랫폼 패키지 때문에 `npm ci`는 EBADPLATFORM으로 실패하므로 사용하지 않음
+- **주의**: GitHub 저장소가 Public → `.env.local` 등 키 파일 절대 커밋 금지
 
 ### 개발 단계별 계획
 
@@ -279,12 +283,12 @@ rara-calendar/
 ### 기술 고려사항 및 해결책
 
 1. **음력 변환**
-   - lunar-calendar npm 패키지 사용 또는 custom 함수 구현
+   - korean-lunar-calendar 패키지 사용
    - 성능 최적화: 월별로 미리 계산
 
 2. **상태 관리**
    - Zustand 사용 (경량, 간단한 API)
-   - localStorage와의 동기화
+   - Firestore 실시간 구독 + localStorage 캐시
 
 3. **알람 기능**
    - Web Notifications API
@@ -309,8 +313,8 @@ rara-calendar/
 4. ✅ 캘린더 로직 및 UI 구현
 5. ✅ 일정 CRUD 기능 구현
 6. ✅ 상세 UI 기능 (검색, 투두, 관리자)
-7. ⬜ 알람 및 PWA 기능
-8. ⬜ 테스트 및 배포
+7. 🔶 알람 및 PWA 기능 (Service Worker·알림 코드 있음, 동작 점검 필요)
+8. 🔶 테스트 및 배포 (Netlify 배포 운영 중, 자동 테스트 없음)
 
 ---
 

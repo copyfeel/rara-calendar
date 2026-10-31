@@ -54,3 +54,6 @@ Thumbs.db
 .cache/
 coverage/
 .jest/
+
+# Local Netlify folder
+.netlify

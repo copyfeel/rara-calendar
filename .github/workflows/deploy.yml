@@ -1,15 +1,18 @@
-name: Build and Deploy
+name: Build Check
 
+# 배포는 Netlify Git 연동(rara-todo-calendar)이 담당하고,
+# 이 워크플로는 빌드가 깨지지 않는지만 확인한다.
 on:
   push:
     branches:
       - main
+      - dev
   pull_request:
     branches:
       - main
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,42 +22,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'frontend/package-lock.json'
 
+      # Netlify 빌드 명령과 동일하게 npm install 사용
+      # (lock 파일의 netlify-cli 하위 플랫폼 패키지 때문에 npm ci는 EBADPLATFORM 실패)
       - name: Install dependencies
         working-directory: frontend
-        run: npm ci
+        run: npm install
 
       - name: Build frontend
         working-directory: frontend
         run: npm run build
-
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3.0
-        with:
-          publish-dir: './frontend/dist'
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "CD: ${{ github.event.head_commit.message }}"
-          enable-pull-request-comment: true
-          enable-commit-comment: true
-          overwrites-pull-request-comment: true
-          github-deployment-environment: production
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        if: github.ref == 'refs/heads/main'
-
-      - name: Comment PR with Netlify preview
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '✅ Build completed! Preview URL will be available once Netlify deploys.'
-            })
