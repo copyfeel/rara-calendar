@@ -24,10 +24,10 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
 
       # Netlify 빌드 명령과 동일하게 npm install 사용
-      # (lock 파일의 netlify-cli 하위 플랫폼 패키지 때문에 npm ci는 EBADPLATFORM 실패)
+      # (npm workspaces 구조라 루트 package-lock.json이 사용됨)
       - name: Install dependencies
         working-directory: frontend
         run: npm install

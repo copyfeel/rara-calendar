@@ -195,7 +195,9 @@ interface Settings {
 - **로컬 실행**: 루트에서 `npm run dev` / 빌드 확인 `npm run build`
 - **배포**: Netlify Git 연동 — 사이트 `rara-todo-calendar` (https://rara-todo-calendar.netlify.app), Firebase 환경변수(`VITE_FIREBASE_*`)는 Netlify에 설정됨
 - **Netlify CLI**: `frontend/`에서 링크됨 (`frontend/.netlify/`, Git 미포함)
-- **CI (GitHub Actions)**: Node 22로 `npm install` + `npm run build`만 확인. lock 파일의 netlify-cli 하위 플랫폼 패키지 때문에 `npm ci`는 EBADPLATFORM으로 실패하므로 사용하지 않음
+- **CI (GitHub Actions)**: Node 22로 `npm install` + `npm run build`만 확인 (Netlify 빌드 명령과 동일)
+- **의존성 lock 파일**: npm workspaces 구조라 루트 `package-lock.json` 하나만 사용 (`frontend/package-lock.json` 없음). 패키지 추가는 루트에서 `npm install <패키지> -w frontend`
+- **Netlify CLI**: 프로젝트 의존성이 아니라 전역 설치(`/opt/homebrew/bin/netlify`)를 사용
 - **주의**: GitHub 저장소가 Public → `.env.local` 등 키 파일 절대 커밋 금지
 
 ### 개발 단계별 계획
