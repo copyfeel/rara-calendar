@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   type User,
@@ -14,6 +15,7 @@ interface AuthState {
   initialized: boolean;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   initializeAuth: () => void;
 }
@@ -49,6 +51,12 @@ export const useAuthStore = create<AuthState>((set) => {
         set({ loading: false });
         throw error;
       }
+    },
+
+    // 비밀번호 재설정 메일 발송 (메일 문구는 한국어)
+    resetPassword: async (email: string) => {
+      auth.languageCode = 'ko';
+      await sendPasswordResetEmail(auth, email);
     },
 
     signOut: async () => {

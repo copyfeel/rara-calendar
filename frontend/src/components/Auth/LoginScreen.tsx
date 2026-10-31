@@ -2,15 +2,47 @@ import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 
 const LoginScreen: React.FC = () => {
-  const { signUpWithEmail, signInWithEmail, loading } = useAuthStore();
+  const { signUpWithEmail, signInWithEmail, resetPassword, loading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [resetSending, setResetSending] = useState(false);
+
+  const handleResetPassword = async () => {
+    setError('');
+    setNotice('');
+
+    if (!email.trim()) {
+      setError('비밀번호를 찾을 이메일을 먼저 입력해주세요');
+      return;
+    }
+
+    setResetSending(true);
+    try {
+      await resetPassword(email.trim());
+      setNotice('비밀번호 재설정 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해주세요');
+    } catch (err) {
+      const errorCode = (err as { code?: string })?.code || '';
+      if (errorCode === 'auth/invalid-email') {
+        setError('올바른 이메일 형식이 아닙니다');
+      } else if (errorCode === 'auth/user-not-found') {
+        setError('가입되지 않은 이메일입니다');
+      } else if (errorCode === 'auth/too-many-requests') {
+        setError('요청이 너무 많습니다. 잠시 후 다시 시도해주세요');
+      } else {
+        setError('재설정 메일 발송에 실패했습니다');
+      }
+    } finally {
+      setResetSending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNotice('');
 
     if (!email.trim() || !password.trim()) {
       setError('이메일과 비밀번호를 입력해주세요');
@@ -38,6 +70,8 @@ const LoginScreen: React.FC = () => {
         setError('가입되지 않은 이메일입니다');
       } else if (errorCode === 'auth/wrong-password') {
         setError('비밀번호가 맞지 않습니다');
+      } else if (errorCode === 'auth/invalid-credential') {
+        setError('이메일 또는 비밀번호가 맞지 않습니다');
       } else if (errorCode === 'auth/weak-password') {
         setError('비밀번호가 너무 약합니다');
       } else {
@@ -88,12 +122,32 @@ const LoginScreen: React.FC = () => {
               className="w-full px-4 py-2 border border-pastel-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pastel-400"
               disabled={loading}
             />
+            {/* 비밀번호 찾기 (로그인 모드에서만) */}
+            {!isSignUp && (
+              <div className="mt-1 text-right">
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  disabled={loading || resetSending}
+                  className="text-xs text-pastel-600 hover:underline disabled:opacity-50"
+                >
+                  {resetSending ? '메일 보내는 중...' : '비밀번호를 잊으셨나요?'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 에러 메시지 */}
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
               {error}
+            </div>
+          )}
+
+          {/* 안내 메시지 */}
+          {notice && (
+            <div className="p-3 bg-pastel-50 border border-pastel-200 rounded-lg text-pastel-700 text-sm">
+              {notice}
             </div>
           )}
 
@@ -116,6 +170,7 @@ const LoginScreen: React.FC = () => {
                 onClick={() => {
                   setIsSignUp(false);
                   setError('');
+                  setNotice('');
                   setEmail('');
                   setPassword('');
                 }}
@@ -131,6 +186,7 @@ const LoginScreen: React.FC = () => {
                 onClick={() => {
                   setIsSignUp(true);
                   setError('');
+                  setNotice('');
                   setEmail('');
                   setPassword('');
                 }}
