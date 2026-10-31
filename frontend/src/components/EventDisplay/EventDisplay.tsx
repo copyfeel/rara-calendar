@@ -262,6 +262,8 @@ const getCategoryColor = (category: string): string => {
       return 'text-pink-700';
     case '마님':
       return 'text-red-600';
+    case '학원':
+      return 'text-olive-700';
     default:
       return 'text-pastel-700';
   }

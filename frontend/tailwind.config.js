@@ -24,6 +24,11 @@ export default {
           800: '#292524',
           accent: '#ffc0cb',
           orange: '#ffa500',
+        },
+        // '학원' 카테고리용 올리브 그린
+        olive: {
+          100: '#dce3bf',
+          700: '#5f6b2a',
         }
       }
     },

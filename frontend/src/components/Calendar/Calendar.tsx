@@ -33,6 +33,8 @@ const getCategoryStyle = (category: string | null | undefined): { bg: string; te
       return { bg: 'bg-pink-300', text: 'text-pastel-700' };
     case '마님':
       return { bg: 'bg-red-100', text: 'text-pastel-700' };
+    case '학원':
+      return { bg: 'bg-olive-100', text: 'text-pastel-700' };
     default:
       return { bg: 'bg-pastel-200', text: 'text-pastel-700' };
   }
