@@ -6,7 +6,9 @@ import webpush from 'web-push';
 // Netlify 함수 공통: Firebase Admin + Web Push 초기화와 사용자별 푸시 발송
 //
 // 필요한 환경변수 (Netlify 사이트 설정):
-//   FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY  — Firebase 서비스 계정
+//   FIREBASE_CLIENT_EMAIL                         — Firebase 서비스 계정 이메일
+//   FIREBASE_PRIVATE_KEY_BASE64 (또는 FIREBASE_PRIVATE_KEY) — 서비스 계정 비공개 키
+//     (CLI가 '-----BEGIN'을 옵션으로 오인하지 않도록 base64로 저장)
 //   FIREBASE_PROJECT_ID (없으면 VITE_FIREBASE_PROJECT_ID 사용)
 //   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY           — Web Push 키
 
@@ -16,6 +18,13 @@ const requireEnv = (name: string, fallback?: string): string => {
   const value = process.env[name] ?? (fallback ? process.env[fallback] : undefined);
   if (!value) throw new Error(`환경변수 ${name}이(가) 설정되지 않았습니다`);
   return value;
+};
+
+const getPrivateKey = (): string => {
+  const encoded = process.env.FIREBASE_PRIVATE_KEY_BASE64;
+  if (encoded) return Buffer.from(encoded, 'base64').toString('utf8');
+  // 환경변수에 저장하면서 줄바꿈이 \n 문자로 바뀐 경우 복원
+  return requireEnv('FIREBASE_PRIVATE_KEY').replace(/\\n/g, '\n');
 };
 
 let initialized = false;
@@ -28,8 +37,7 @@ const init = () => {
       credential: cert({
         projectId: requireEnv('FIREBASE_PROJECT_ID', 'VITE_FIREBASE_PROJECT_ID'),
         clientEmail: requireEnv('FIREBASE_CLIENT_EMAIL'),
-        // 환경변수에 저장하면서 줄바꿈이 \n 문자로 바뀐 경우 복원
-        privateKey: requireEnv('FIREBASE_PRIVATE_KEY').replace(/\\n/g, '\n'),
+        privateKey: getPrivateKey(),
       }),
     });
   }

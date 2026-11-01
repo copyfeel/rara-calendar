@@ -205,7 +205,7 @@ interface Settings {
   - `netlify/functions/send-alarms.mts`: 1분마다 실행, 최근 10분 내 `alarmAt` 일정을 찾아 푸시 발송 후 `alarmSent=true`
   - `netlify/functions/send-test.mts`: 관리자 화면 '테스트 알림 보내기'
   - 푸시 구독 기기는 앱 내 알람(`useNotification`)을 건너뜀 (중복 방지)
-  - Netlify 환경변수: `VITE_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (로컬은 루트 `.env`, `frontend/.env.local` — Git 미포함)
+  - Netlify 환경변수: `VITE_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY_BASE64` (로컬은 루트 `.env`, `frontend/.env.local` — Git 미포함)
   - 아이폰: iOS 16.4+, Safari '홈 화면에 추가'한 앱에서만 동작
 - **주의**: GitHub 저장소가 Public → `.env.local` 등 키 파일 절대 커밋 금지
 
