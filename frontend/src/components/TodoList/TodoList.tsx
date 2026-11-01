@@ -110,7 +110,8 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
     : '50vh';
 
   // ±30일 범위 내 전체 표시 (체크된 항목은 취소선, 범위 벗어나면 자연히 사라짐)
-  const visibleEvents = rangedEvents;
+  // 앞으로 30일 → 30일 전 순서 (같은 날짜 안의 순서는 유지)
+  const visibleEvents = [...rangedEvents].sort((a, b) => b.date.localeCompare(a.date));
 
   return (
     <>
@@ -144,7 +145,7 @@ const TodoList: React.FC<TodoListProps> = ({ onClose, calendarBottom = 0, onDate
           <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-pastel-300 rounded-full" />
 
           <h2 className="text-sm font-semibold text-pastel-700 mt-1">
-            30일 전 ~ 앞으로 30일 일정
+            앞으로 30일 ~ 30일 전 일정
           </h2>
 
           <button
