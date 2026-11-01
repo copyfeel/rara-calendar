@@ -1,6 +1,15 @@
 import { useEffect } from 'react';
 import { useEventStore } from '../store/eventStore';
 import dayjs from 'dayjs';
+import {
+  ALARM_CATCH_UP_MINUTES,
+  getAlarmTime,
+  isAlarmFired,
+  markAlarmFired,
+  showAlarmNotification,
+} from '../utils/alarm';
+
+const CHECK_INTERVAL_MS = 30 * 1000;
 
 export const useNotification = () => {
   const { events, settings } = useEventStore();
@@ -8,46 +17,41 @@ export const useNotification = () => {
   useEffect(() => {
     if (!settings.alarmEnabled) return;
 
-    // 브라우저 알람 권한 요청
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-
-    // 1분마다 알람 확인
-    const interval = setInterval(() => {
+    const checkAlarms = () => {
       if (!('Notification' in window)) return;
       if (Notification.permission !== 'granted') return;
 
       const now = dayjs();
-      const currentDate = now.format('YYYY-MM-DD');
 
       events.forEach(event => {
-        // 오늘 날짜 일정만 확인
-        if (event.date !== currentDate) return;
+        // 날짜와 관계없이 실제 알람 시각으로 판단 (1주일 전·1일 전 알람 포함)
+        const alarmTime = getAlarmTime(event);
+        if (!alarmTime) return;
 
-        // 알람 활성화 + 시간 설정 + alarm > 0 인 경우만 처리
-        if (!event.alarmEnabled) return;
-        if (!event.useTime) return;
-        if (!event.alarm || event.alarm <= 0) return;
-        if (!event.startTime) return;
+        const minutesLate = now.diff(alarmTime, 'minute', true);
+        // 아직 시각 전이거나, 너무 오래 지나 놓친 알람은 건너뜀
+        if (minutesLate < 0 || minutesLate > ALARM_CATCH_UP_MINUTES) return;
+        if (isAlarmFired(event.id, alarmTime)) return;
 
-        const eventTime = dayjs(`${event.date} ${event.startTime}`);
-        if (!eventTime.isValid()) return;
-
-        const alarmTime = eventTime.subtract(event.alarm, 'minute');
-        const timeDiff = now.diff(alarmTime, 'minute');
-
-        // 알람 시간에서 1분 이내면 알람 표시
-        if (timeDiff >= 0 && timeDiff < 1) {
-          new Notification('📅 Rara Calendar', {
-            body: `${event.title} — ${event.startTime} 시작 (${event.alarm}분 전 알림)`,
-            icon: '/favicon.ico',
-            tag: event.id, // 중복 알람 방지
-          });
-        }
+        markAlarmFired(event.id, alarmTime);
+        showAlarmNotification(event);
       });
-    }, 60000); // 1분마다 확인
+    };
 
-    return () => clearInterval(interval);
+    // 앱을 열거나 다시 화면에 돌아왔을 때 바로 확인 (백그라운드 탭은 타이머가 지연됨)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') checkAlarms();
+    };
+
+    checkAlarms();
+    const interval = setInterval(checkAlarms, CHECK_INTERVAL_MS);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', checkAlarms);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', checkAlarms);
+    };
   }, [events, settings.alarmEnabled]);
 };

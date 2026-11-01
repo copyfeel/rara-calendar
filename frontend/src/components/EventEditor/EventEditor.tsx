@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import type { Event } from '../../types/event';
+import {
+  ALARM_OPTIONS,
+  getAlarmTime,
+  getNotificationPermission,
+  requestNotificationPermission,
+} from '../../utils/alarm';
 
 const getCategoryColor = (category: string): string => {
   switch (category) {
@@ -27,17 +33,6 @@ interface EventEditorProps {
   onClose: () => void;
   editingEvent?: Event;
 }
-
-const ALARM_OPTIONS = [
-  { label: '1주일 전', value: 7 * 24 * 60 },
-  { label: '3일 전', value: 3 * 24 * 60 },
-  { label: '2일 전', value: 2 * 24 * 60 },
-  { label: '1일 전', value: 24 * 60 },
-  { label: '3시간 전', value: 3 * 60 },
-  { label: '2시간 전', value: 2 * 60 },
-  { label: '1시간 전', value: 60 },
-  { label: '30분 전', value: 30 },
-];
 
 const SPECIAL_SYMBOLS = [
   "✖","✔","✓","☑","⊙","◉","◎","●","⬤","○",
@@ -70,6 +65,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
   const [alarmEnabled, setAlarmEnabled] = useState(
     editingEvent ? (editingEvent.alarmEnabled === true) : false
   );
+  const [notifyPermission, setNotifyPermission] = useState(getNotificationPermission());
   const [showSymbolPicker, setShowSymbolPicker] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const symbolPickerRef = useRef<HTMLDivElement>(null);
@@ -100,6 +96,23 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
     });
     setShowSymbolPicker(false);
   };
+
+  // 알람은 시작 시간 기준이라 알람을 켜면 시간 설정도 함께 켠다.
+  // 권한 요청은 사용자 클릭 안에서 해야 iOS에서도 동작한다.
+  const handleAlarmToggle = async (checked: boolean) => {
+    setAlarmEnabled(checked);
+    if (!checked) return;
+    if (!useTime) setUseTime(true);
+    setNotifyPermission(await requestNotificationPermission());
+  };
+
+  const alarmTime = getAlarmTime({
+    date: editingEvent?.date || selectedDate,
+    startTime,
+    alarm,
+    alarmEnabled,
+    useTime,
+  });
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -290,7 +303,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
               <input
                 type="checkbox"
                 checked={alarmEnabled}
-                onChange={(e) => setAlarmEnabled(e.target.checked)}
+                onChange={(e) => handleAlarmToggle(e.target.checked)}
                 className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
               />
               <span className="text-sm font-medium text-pastel-700">알람 설정</span>
@@ -313,6 +326,27 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
                     </option>
                   ))}
                 </select>
+                {/* 알람 안내 */}
+                <p className="mt-2 text-xs leading-relaxed">
+                  {!useTime ? (
+                    <span className="text-red-500">시간 설정을 켜야 알람이 울립니다 (시작 시간 기준)</span>
+                  ) : alarmTime && alarmTime.isBefore(new Date()) ? (
+                    <span className="text-red-500">알람 시각({alarmTime.format('M월 D일 HH:mm')})이 이미 지났습니다</span>
+                  ) : alarmTime ? (
+                    <span className="text-pastel-500">{alarmTime.format('M월 D일 HH:mm')}에 알림이 울립니다</span>
+                  ) : null}
+                  {notifyPermission === 'denied' && (
+                    <span className="block text-red-500">
+                      브라우저 알림이 차단되어 있습니다. 브라우저 설정에서 이 사이트의 알림을 허용해주세요
+                    </span>
+                  )}
+                  {notifyPermission === 'unsupported' && (
+                    <span className="block text-red-500">
+                      이 브라우저는 알림을 지원하지 않습니다 (아이폰은 홈 화면에 추가한 앱에서만 가능)
+                    </span>
+                  )}
+                  <span className="block text-pastel-400">앱이 열려 있을 때 울립니다</span>
+                </p>
               </div>
             )}
           </div>

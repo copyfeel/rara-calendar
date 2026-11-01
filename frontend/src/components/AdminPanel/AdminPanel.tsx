@@ -1,14 +1,26 @@
+import { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
+import { getNotificationPermission, requestNotificationPermission } from '../../utils/alarm';
+
+const PERMISSION_LABEL: Record<string, string> = {
+  granted: '허용됨',
+  denied: '차단됨 (브라우저 설정에서 허용 필요)',
+  default: '아직 요청 안 함',
+  unsupported: '이 브라우저는 지원 안 함',
+};
 
 const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { settings, updateSettings } = useEventStore();
+  const [notifyPermission, setNotifyPermission] = useState(getNotificationPermission());
 
   const handleThemeChange = (theme: 'pastelGray' | 'light' | 'dark') => {
     updateSettings({ theme });
   };
 
-  const handleAlarmToggle = () => {
-    updateSettings({ alarmEnabled: !settings.alarmEnabled });
+  const handleAlarmToggle = async () => {
+    const next = !settings.alarmEnabled;
+    updateSettings({ alarmEnabled: next });
+    if (next) setNotifyPermission(await requestNotificationPermission());
   };
 
   const handleFontChange = (font: string) => {
@@ -71,6 +83,9 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <h3 className="font-semibold text-pastel-700">알람</h3>
                 <p className="text-xs text-pastel-500 mt-1">
                   알람 기능을 활성화/비활성화합니다
+                </p>
+                <p className="text-xs text-pastel-500 mt-1">
+                  브라우저 알림 권한: {PERMISSION_LABEL[notifyPermission]}
                 </p>
               </div>
               <button

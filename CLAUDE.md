@@ -315,7 +315,7 @@ interface Settings {
 4. ✅ 캘린더 로직 및 UI 구현
 5. ✅ 일정 CRUD 기능 구현
 6. ✅ 상세 UI 기능 (검색, 투두, 관리자)
-7. 🔶 알람 및 PWA 기능 (Service Worker·알림 코드 있음, 동작 점검 필요)
+7. 🔶 알람 및 PWA 기능 (1단계 완료: 앱이 열려 있을 때 알람 · 2단계 예정: Firebase Cloud Functions + FCM 푸시로 앱 닫혀도 알람)
 8. 🔶 테스트 및 배포 (Netlify 배포 운영 중, 자동 테스트 없음)
 
 ---
