@@ -207,6 +207,41 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
             />
           </div>
 
+          {/* ── 카테고리 설정 ────────────────────── */}
+          <div className="border border-pastel-200 rounded-lg overflow-hidden">
+            <label className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-pastel-50 transition select-none">
+              <input
+                type="checkbox"
+                checked={useCategory}
+                onChange={(e) => setUseCategory(e.target.checked)}
+                className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
+              />
+              <span className="text-sm font-medium text-pastel-700">카테고리 설정</span>
+              {useCategory && (
+                <span className={`ml-auto text-xs font-semibold ${getCategoryColor(category)}`}>
+                  {{ 일상: '일상', 업무: '업무', Event: '행사', 가족: '가족', '아이': '아이', '마님': '마님', '학원': '학원' }[category]}
+                </span>
+              )}
+            </label>
+            {useCategory && (
+              <div className="px-4 pb-4 pt-1 border-t border-pastel-100 bg-pastel-50">
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as typeof category)}
+                  className="w-full px-3 py-2 bg-white border border-pastel-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pastel-400"
+                >
+                  <option value="일상">일상</option>
+                  <option value="업무">업무</option>
+                  <option value="Event">행사</option>
+                  <option value="가족">가족</option>
+                  <option value="아이">아이</option>
+                  <option value="마님">마님</option>
+                  <option value="학원">학원</option>
+                </select>
+              </div>
+            )}
+          </div>
+
           {/* ── 시간 설정 ─────────────────────────── */}
           <div className="border border-pastel-200 rounded-lg overflow-hidden">
             {/* 체크박스 헤더 */}
@@ -245,41 +280,6 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
                     className="w-full px-3 py-2 bg-white border border-pastel-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pastel-400"
                   />
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* ── 카테고리 설정 ────────────────────── */}
-          <div className="border border-pastel-200 rounded-lg overflow-hidden">
-            <label className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-pastel-50 transition select-none">
-              <input
-                type="checkbox"
-                checked={useCategory}
-                onChange={(e) => setUseCategory(e.target.checked)}
-                className="w-4 h-4 rounded accent-pastel-400 cursor-pointer flex-shrink-0"
-              />
-              <span className="text-sm font-medium text-pastel-700">카테고리 설정</span>
-              {useCategory && (
-                <span className={`ml-auto text-xs font-semibold ${getCategoryColor(category)}`}>
-                  {{ 일상: '일상', 업무: '업무', Event: '행사', 가족: '가족', '아이': '아이', '마님': '마님', '학원': '학원' }[category]}
-                </span>
-              )}
-            </label>
-            {useCategory && (
-              <div className="px-4 pb-4 pt-1 border-t border-pastel-100 bg-pastel-50">
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as typeof category)}
-                  className="w-full px-3 py-2 bg-white border border-pastel-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pastel-400"
-                >
-                  <option value="일상">일상</option>
-                  <option value="업무">업무</option>
-                  <option value="Event">행사</option>
-                  <option value="가족">가족</option>
-                  <option value="아이">아이</option>
-                  <option value="마님">마님</option>
-                  <option value="학원">학원</option>
-                </select>
               </div>
             )}
           </div>

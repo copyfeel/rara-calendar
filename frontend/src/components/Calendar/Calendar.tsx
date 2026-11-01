@@ -26,7 +26,7 @@ const getCategoryStyle = (category: string | null | undefined): { bg: string; te
     case '일상':
       return { bg: 'bg-gray-500', text: 'text-white' };
     case 'Event':
-      return { bg: 'bg-orange-100', text: 'text-pastel-700' };
+      return { bg: 'bg-amber-200', text: 'text-pastel-700' };
     case '가족':
       return { bg: 'bg-stone-200', text: 'text-pastel-700' };
     case '아이':
@@ -156,6 +156,22 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                             className={`${style.bg} ${style.text} px-0.5 rounded truncate`}
                             style={{ fontSize: '9px' }}
                           >
+                            {/* 시간 설정된 일정: 작은 시계 아이콘 (글자색과 동일) */}
+                            {event.useTime && event.startTime && (
+                              <svg
+                                viewBox="0 0 12 12"
+                                width="7"
+                                height="7"
+                                className="inline-block align-baseline mr-px"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.6"
+                                aria-label="시간 설정됨"
+                              >
+                                <circle cx="6" cy="6" r="5" />
+                                <path d="M6 3.2V6l1.8 1.2" strokeLinecap="round" />
+                              </svg>
+                            )}
                             {event.title.substring(0, 5)}
                           </div>
                         );
