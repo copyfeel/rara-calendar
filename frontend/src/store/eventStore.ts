@@ -44,11 +44,27 @@ interface EventStore {
   clearFirestoreSync: () => void;
 }
 
-const getInitialSettings = (): Settings => ({
+const DEFAULT_SETTINGS: Settings = {
   theme: 'pastelGray',
   alarmEnabled: true,
   fontFamily: 'default',
-});
+};
+
+// 설정은 바뀔 때마다 별도 키에 즉시 저장 (로그인 상태에서도 앱을 다시 열면 유지)
+const SETTINGS_KEY = 'raraCalendarSettings';
+
+const getInitialSettings = (): Settings => {
+  try {
+    const stored = localStorage.getItem(SETTINGS_KEY);
+    // 이전 버전은 raraCalendarData 안에 settings를 함께 저장했음
+    const legacy = localStorage.getItem('raraCalendarData');
+    const settings = stored ? JSON.parse(stored) : legacy ? JSON.parse(legacy).settings : null;
+    if (settings) return { ...DEFAULT_SETTINGS, ...settings };
+  } catch {
+    // 저장값이 깨졌으면 기본값 사용
+  }
+  return { ...DEFAULT_SETTINGS };
+};
 
 export const useEventStore = create<EventStore>((set, get) => ({
   events: [],
@@ -138,12 +154,19 @@ export const useEventStore = create<EventStore>((set, get) => ({
 
   setSelectedDate: (date) => set({ selectedDate: date }),
 
-  updateSettings: (updates) => set((state) => ({
-    settings: {
-      ...state.settings,
-      ...updates,
-    },
-  })),
+  updateSettings: (updates) => {
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        ...updates,
+      },
+    }));
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(get().settings));
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
+  },
 
   reorderEvents: (date, fromIndex, toIndex) => {
     const { events, eventOrder } = get();
@@ -169,11 +192,11 @@ export const useEventStore = create<EventStore>((set, get) => ({
       const stored = localStorage.getItem('raraCalendarData');
       const orderStored = localStorage.getItem('raraCalendarEventOrder');
       if (stored) {
-        const { events, settings } = JSON.parse(stored);
+        const { events } = JSON.parse(stored);
         const eventOrder = orderStored ? JSON.parse(orderStored) : {};
         set({
           events: events || [],
-          settings: settings || getInitialSettings(),
+          settings: getInitialSettings(),
           eventOrder,
         });
       }

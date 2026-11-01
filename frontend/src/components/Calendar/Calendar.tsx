@@ -19,6 +19,7 @@ const applyEventOrder = (dateEvents: Event[], order: string[] | undefined): Even
 };
 
 // 카테고리별 배경색/글자색 반환
+// 칩 배경이 밝은 고정색이라 글자도 테마와 무관한 진한색(stone-700) 사용
 const getCategoryStyle = (category: string | null | undefined): { bg: string; text: string } => {
   switch (category) {
     case '업무':
@@ -26,17 +27,17 @@ const getCategoryStyle = (category: string | null | undefined): { bg: string; te
     case '일상':
       return { bg: 'bg-gray-500', text: 'text-white' };
     case 'Event':
-      return { bg: 'bg-amber-200', text: 'text-pastel-700' };
+      return { bg: 'bg-amber-200', text: 'text-stone-700' };
     case '가족':
-      return { bg: 'bg-stone-200', text: 'text-pastel-700' };
+      return { bg: 'bg-stone-200', text: 'text-stone-700' };
     case '아이':
-      return { bg: 'bg-pink-300', text: 'text-pastel-700' };
+      return { bg: 'bg-pink-300', text: 'text-stone-700' };
     case '마님':
-      return { bg: 'bg-red-100', text: 'text-pastel-700' };
+      return { bg: 'bg-red-100', text: 'text-stone-700' };
     case '학원':
-      return { bg: 'bg-olive-100', text: 'text-pastel-700' };
+      return { bg: 'bg-olive-100', text: 'text-stone-700' };
     default:
-      return { bg: 'bg-pastel-200', text: 'text-pastel-700' };
+      return { bg: 'bg-pastel-200', text: 'text-stone-700' };
   }
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
 import { useEventStore } from './store/eventStore';
 import { useAuthStore } from './store/authStore';
 import { useNotification } from './hooks/useNotification';
@@ -17,6 +17,7 @@ function App() {
   const { loadFromStorage, saveToStorage, initializeFirestoreSync, clearFirestoreSync } =
     useEventStore();
   const { user, loading, initialized } = useAuthStore();
+  const theme = useEventStore((state) => state.settings.theme);
   const [showEventEditor, setShowEventEditor] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | undefined>();
   const [showSearchScreen, setShowSearchScreen] = useState(false);
@@ -94,6 +95,13 @@ function App() {
       document.body.style.overflow = '';
     };
   }, [showTodoList, showSearchScreen, showEventEditor, showAdminPanel]);
+
+  // 관리자 화면 테마 적용 (index.css [data-theme]) — 그리기 전에 적용해 깜빡임 방지
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    const themeColor = { pastelGray: '#a8a29e', light: '#ffffff', dark: '#1c1b1a' }[theme];
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
+  }, [theme]);
 
   // Firebase 동기화 관리
   useEffect(() => {

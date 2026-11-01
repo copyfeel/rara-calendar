@@ -86,14 +86,4 @@
   }
 }
 
-/* 다크 모드 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    filter: invert(1) hue-rotate(180deg);
-  }
-
-  img,
-  video {
-    filter: invert(1) hue-rotate(180deg);
-  }
-}
+/* 다크 모드는 관리자 화면 테마 설정으로 적용 (index.css [data-theme='dark']) */

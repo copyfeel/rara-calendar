@@ -4,18 +4,85 @@
 
 @import './styles/responsive.css';
 
+/* ── 테마 (관리자 화면 → 테마, <html data-theme="...">) ──
+   tailwind의 pastel-* 색이 이 RGB 값을 사용한다 */
+
+/* 파스텔 그레이 (기본) */
 :root {
-  --color-pastel-50: #fafaf9;
-  --color-pastel-100: #f5f5f4;
-  --color-pastel-200: #e7e5e4;
-  --color-pastel-300: #d6d3d1;
-  --color-pastel-400: #a8a29e;
-  --color-pastel-500: #78716b;
-  --color-pastel-600: #57534e;
-  --color-pastel-700: #44403c;
-  --color-pastel-800: #292524;
+  --pastel-50: 250 250 249;   /* #fafaf9 */
+  --pastel-100: 245 245 244;  /* #f5f5f4 */
+  --pastel-200: 231 229 228;  /* #e7e5e4 */
+  --pastel-300: 214 211 209;  /* #d6d3d1 */
+  --pastel-400: 168 162 158;  /* #a8a29e */
+  --pastel-500: 120 113 107;  /* #78716b */
+  --pastel-600: 87 83 78;     /* #57534e */
+  --pastel-700: 68 64 60;     /* #44403c */
+  --pastel-800: 41 37 36;     /* #292524 */
+  --surface: 255 255 255;     /* bg-white 패널 */
+  color-scheme: light;
+}
+
+/* 라이트: 흰 배경 + 차가운 무채색 */
+:root[data-theme='light'] {
+  --pastel-50: 255 255 255;
+  --pastel-100: 246 247 249;
+  --pastel-200: 233 236 240;
+  --pastel-300: 213 218 225;
+  --pastel-400: 156 163 175;
+  --pastel-500: 107 114 128;
+  --pastel-600: 75 85 99;
+  --pastel-700: 55 65 81;
+  --pastel-800: 31 41 55;
+  --surface: 255 255 255;
+}
+
+/* 다크: 밝기 순서를 뒤집은 따뜻한 그레이 */
+:root[data-theme='dark'] {
+  --pastel-50: 28 27 26;
+  --pastel-100: 38 37 36;
+  --pastel-200: 54 52 50;
+  --pastel-300: 76 73 70;
+  --pastel-400: 119 114 109;
+  --pastel-500: 143 138 133;
+  --pastel-600: 189 184 179;
+  --pastel-700: 231 229 228;
+  --pastel-800: 245 245 244;
+  --surface: 36 35 34;
+  color-scheme: dark;
+}
+
+:root {
+  --color-pastel-50: rgb(var(--pastel-50));
+  --color-pastel-100: rgb(var(--pastel-100));
+  --color-pastel-200: rgb(var(--pastel-200));
+  --color-pastel-300: rgb(var(--pastel-300));
+  --color-pastel-400: rgb(var(--pastel-400));
+  --color-pastel-500: rgb(var(--pastel-500));
+  --color-pastel-600: rgb(var(--pastel-600));
+  --color-pastel-700: rgb(var(--pastel-700));
+  --color-pastel-800: rgb(var(--pastel-800));
   --color-pastel-accent: #ffc0cb;
   --color-pastel-orange: #ffa500;
+}
+
+/* 다크 테마: pastel 외 고정 밝은색 보정 */
+[data-theme='dark'] .bg-white,
+[data-theme='dark'] .hover\:bg-white:hover {
+  background-color: rgb(var(--surface));
+}
+[data-theme='dark'] .bg-gray-100 {
+  background-color: rgb(var(--pastel-200));
+}
+[data-theme='dark'] .bg-red-50,
+[data-theme='dark'] .hover\:bg-red-50:hover,
+[data-theme='dark'] .hover\:bg-red-100:hover {
+  background-color: rgb(127 29 29 / 0.35);
+}
+[data-theme='dark'] .border-red-200 {
+  border-color: rgb(153 27 27 / 0.6);
+}
+[data-theme='dark'] .text-red-600 {
+  color: rgb(248 113 113);
 }
 
 * {
