@@ -163,7 +163,7 @@ rara-calendar/
 ### 데이터 저장 구조
 - **Firestore**: `users/{uid}/events/{eventId}` — 로그인 시 `onSnapshot`으로 실시간 구독, 기존 로컬 일정은 `migrateLocalEventsToFirestore`로 이전
 - **localStorage**: `raraCalendarData` (일정 캐시), `raraCalendarSettings` (관리자 설정, 변경 즉시 저장), `raraCalendarEventOrder` (날짜별 일정 순서)
-- **테마**: `<html data-theme>`(App.tsx) + `index.css`의 `--pastel-*` RGB 변수 → tailwind `pastel-*` 색. 파스텔 그레이(기본)·라이트·다크. 다크에서 `bg-white` 등 고정색은 `index.css`에서 보정
+- **테마**: `<html data-theme>`(App.tsx) + `index.css`의 `--pastel-*` RGB 변수 → tailwind `pastel-*` 색. 파스텔 그레이(기본)·라이트·다크·미드나잇 네이비·샴페인 아이보리. 다크에서 `bg-white` 등 고정색은 `index.css`에서 보정
 
 ```typescript
 // frontend/src/types/event.ts

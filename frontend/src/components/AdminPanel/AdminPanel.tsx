@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { useAuthStore } from '../../store/authStore';
+import type { Settings } from '../../types/event';
 import { getNotificationPermission, requestNotificationPermission } from '../../utils/alarm';
 import {
   getPushSupport,
@@ -27,7 +28,7 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMessage, setPushMessage] = useState('');
 
-  const handleThemeChange = (theme: 'pastelGray' | 'light' | 'dark') => {
+  const handleThemeChange = (theme: Settings['theme']) => {
     updateSettings({ theme });
   };
 
@@ -118,6 +119,8 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 { value: 'pastelGray', label: '파스텔 그레이' },
                 { value: 'light', label: '라이트' },
                 { value: 'dark', label: '다크' },
+                { value: 'navy', label: '미드나잇 네이비' },
+                { value: 'champagne', label: '샴페인 아이보리' },
               ].map(theme => (
                 <label key={theme.value} className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -125,7 +128,7 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     name="theme"
                     value={theme.value}
                     checked={settings.theme === theme.value}
-                    onChange={() => handleThemeChange(theme.value as any)}
+                    onChange={() => handleThemeChange(theme.value as Settings['theme'])}
                     className="rounded-full"
                   />
                   <span className="text-pastel-700">{theme.label}</span>

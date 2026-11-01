@@ -19,7 +19,7 @@ export interface Event {
 }
 
 export interface Settings {
-  theme: 'pastelGray' | 'light' | 'dark';
+  theme: 'pastelGray' | 'light' | 'dark' | 'navy' | 'champagne';
   alarmEnabled: boolean;
   fontFamily: string;
 }

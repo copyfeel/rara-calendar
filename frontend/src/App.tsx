@@ -99,7 +99,13 @@ function App() {
   // 관리자 화면 테마 적용 (index.css [data-theme]) — 그리기 전에 적용해 깜빡임 방지
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
-    const themeColor = { pastelGray: '#a8a29e', light: '#ffffff', dark: '#1c1b1a' }[theme];
+    const themeColor = {
+      pastelGray: '#a8a29e',
+      light: '#ffffff',
+      dark: '#1c1b1a',
+      navy: '#f8fafd',
+      champagne: '#fcfaf5',
+    }[theme];
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
   }, [theme]);
 
