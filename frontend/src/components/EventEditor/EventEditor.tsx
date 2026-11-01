@@ -190,7 +190,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
                   type="button"
                   onClick={() => setShowSymbolPicker(v => !v)}
                   title="특수기호 삽입"
-                  className="text-base leading-none px-1.5 py-0.5 rounded border border-pastel-200
+                  className="w-[25px] h-[20px] flex items-center justify-center text-base leading-none rounded border border-pastel-200
                              text-pastel-500 hover:bg-pastel-100 transition select-none"
                 >
                   ✱
@@ -218,13 +218,13 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
                 onClick={() => setImportant(v => !v)}
                 title="중요 날짜 표시"
                 aria-pressed={important}
-                className={`leading-none px-1.5 py-0.5 rounded border transition select-none flex items-center ${
+                className={`w-[25px] h-[20px] flex items-center justify-center rounded border transition select-none ${
                   important
                     ? 'border-red-300 bg-red-50 text-red-500'
                     : 'border-pastel-200 text-pastel-400 hover:bg-pastel-100'
                 }`}
               >
-                <ImportantStar size={16} filled={important} />
+                <ImportantStar size={12} strokeWidth={1.6} filled={important} />
               </button>
             </div>
             <textarea
