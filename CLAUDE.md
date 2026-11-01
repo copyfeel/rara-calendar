@@ -207,6 +207,7 @@ interface Settings {
   - 푸시 구독 기기는 앱 내 알람(`useNotification`)을 건너뜀 (중복 방지)
   - Netlify 환경변수: `VITE_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY_BASE64` (로컬은 루트 `.env`, `frontend/.env.local` — Git 미포함)
   - 아이폰: iOS 16.4+, Safari '홈 화면에 추가'한 앱에서만 동작
+  - 루트 `package.json`의 `overrides.jose: ^5` 유지 필수 — Netlify 함수 런타임이 ESM 전용 jose v6를 require하지 못해 firebase-admin 로드 실패(ERR_REQUIRE_ESM)
 - **주의**: GitHub 저장소가 Public → `.env.local` 등 키 파일 절대 커밋 금지
 
 ### 개발 단계별 계획
@@ -324,7 +325,7 @@ interface Settings {
 4. ✅ 캘린더 로직 및 UI 구현
 5. ✅ 일정 CRUD 기능 구현
 6. ✅ 상세 UI 기능 (검색, 투두, 관리자)
-7. 🔶 알람 및 PWA 기능 (1단계 완료: 앱이 열려 있을 때 알람 · 2단계 예정: Firebase Cloud Functions + FCM 푸시로 앱 닫혀도 알람)
+7. ✅ 알람 및 PWA 기능 (1단계: 앱이 열려 있을 때 알람 · 2단계: Netlify 예약 함수 + Web Push로 앱 닫혀도 알람, 아이폰 확인 완료)
 8. 🔶 테스트 및 배포 (Netlify 배포 운영 중, 자동 테스트 없음)
 
 ---
