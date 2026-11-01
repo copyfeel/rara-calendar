@@ -11,6 +11,8 @@ export interface Event {
   useTime?: boolean;       // 시간 입력 여부
   useCategory?: boolean;   // 카테고리 설정 여부
   isAllDay?: boolean;
+  alarmAt?: string | null; // 서버 푸시용: 알람 울릴 시각 (UTC ISO), 알람 없으면 null
+  alarmSent?: boolean;     // 서버 푸시용: 해당 alarmAt 알람 발송 여부
   createdAt: string;
   updatedAt: string;
 }

@@ -8,6 +8,7 @@ import {
   markAlarmFired,
   showAlarmNotification,
 } from '../utils/alarm';
+import { isPushActiveOnThisDevice } from '../lib/pushService';
 
 const CHECK_INTERVAL_MS = 30 * 1000;
 
@@ -20,6 +21,8 @@ export const useNotification = () => {
     const checkAlarms = () => {
       if (!('Notification' in window)) return;
       if (Notification.permission !== 'granted') return;
+      // 서버 푸시를 받는 기기는 푸시가 알람을 담당 (중복 알림 방지)
+      if (isPushActiveOnThisDevice()) return;
 
       const now = dayjs();
 

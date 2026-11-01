@@ -33,6 +33,17 @@ export const getAlarmTime = (
   return start.subtract(event.alarm, 'minute');
 };
 
+// 서버 푸시용 알람 필드. 시간대 문제를 피하려고 기기(한국 시간)에서 UTC 시각으로 계산해 저장한다.
+// 알람 시각이 바뀌면 다시 발송되도록 alarmSent를 초기화한다.
+export const getPushAlarmFields = (
+  event: Pick<Event, 'date' | 'startTime' | 'alarm' | 'alarmEnabled' | 'useTime'>,
+  prev?: Pick<Event, 'alarmAt' | 'alarmSent'>
+): { alarmAt: string | null; alarmSent: boolean } => {
+  const alarmAt = getAlarmTime(event)?.toISOString() ?? null;
+  const unchanged = prev !== undefined && prev.alarmAt === alarmAt;
+  return { alarmAt, alarmSent: unchanged ? prev.alarmSent === true : false };
+};
+
 // ── 이미 울린 알람 기록 (중복 방지) ──────────────────
 // 키에 알람 시각을 포함해서, 일정 시간을 바꾸면 다시 울릴 수 있게 한다
 const firedKey = (eventId: string, alarmTime: Dayjs) => `${eventId}|${alarmTime.toISOString()}`;

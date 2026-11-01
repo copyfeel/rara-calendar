@@ -7,6 +7,10 @@ import {
   deleteEventFromFirestore,
   subscribeUserEvents,
 } from '../lib/firestoreService';
+import { getAlarmTime, getPushAlarmFields } from '../utils/alarm';
+
+// 서버 푸시 필드(alarmAt)가 없는 기존 알람 일정을 한 번 채워 넣을 때 중복 쓰기 방지
+const backfillingIds = new Set<string>();
 
 interface EventStore {
   events: Event[];
@@ -57,6 +61,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
   addEvent: (event) => {
     const newEvent: Event = {
       ...event,
+      ...getPushAlarmFields(event),
       id: uuidv4(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -76,13 +81,21 @@ export const useEventStore = create<EventStore>((set, get) => ({
   },
 
   updateEvent: (id, updates) => {
+    // 알람 관련 값이 바뀌면 서버 푸시 필드도 다시 계산
+    const prev = get().events.find((event) => event.id === id);
+    const alarmFields = prev ? getPushAlarmFields({ ...prev, ...updates }, prev) : {};
+    const changes = {
+      ...updates,
+      ...alarmFields,
+      updatedAt: new Date().toISOString(),
+    };
+
     set((state) => ({
       events: state.events.map((event) =>
         event.id === id
           ? {
               ...event,
-              ...updates,
-              updatedAt: new Date().toISOString(),
+              ...changes,
             }
           : event
       ),
@@ -91,10 +104,8 @@ export const useEventStore = create<EventStore>((set, get) => ({
     // Firestore에도 업데이트
     const { currentUserId } = get();
     if (currentUserId) {
-      updateEventInFirestore(currentUserId, id, {
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      }).catch((err) => console.error('Error updating event in Firestore:', err));
+      updateEventInFirestore(currentUserId, id, changes)
+        .catch((err) => console.error('Error updating event in Firestore:', err));
     }
   },
 
@@ -199,6 +210,16 @@ export const useEventStore = create<EventStore>((set, get) => ({
       uid,
       (events) => {
         set({ events });
+
+        // 푸시 기능 이전에 만든 알람 일정에 alarmAt 채우기 (필드가 없을 때만, 1회)
+        events.forEach((event) => {
+          if (event.alarmAt !== undefined || backfillingIds.has(event.id)) return;
+          if (!getAlarmTime(event)) return;
+          backfillingIds.add(event.id);
+          updateEventInFirestore(uid, event.id, getPushAlarmFields(event))
+            .catch((err) => console.error('Error backfilling alarmAt:', err))
+            .finally(() => backfillingIds.delete(event.id));
+        });
       },
       (error) => {
         console.error('Error syncing events:', error);

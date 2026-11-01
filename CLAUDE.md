@@ -116,7 +116,7 @@ Rara Calendar 프로젝트를 생성합니다.
 
 ### 기술 스택 (현재 실제 구성 · 2026-10-31 기준)
 - **프론트엔드**: React 19 + Vite 8 + TypeScript 6
-- **백엔드**: 없음 (서버 코드 없음, 정적 사이트로 배포)
+- **백엔드**: Netlify Functions (Web Push 알람 발송 예약 함수, firebase-admin + web-push)
 - **데이터 저장**: Firebase Firestore (로그인 사용자별 실시간 동기화, IndexedDB 오프라인 캐시) + localStorage (로컬 캐시·일정 순서)
 - **인증**: Firebase Auth (이메일/비밀번호)
 - **상태관리**: Zustand
@@ -153,7 +153,8 @@ rara-calendar/
 │   ├── package.json
 │   └── vite.config.ts
 ├── .github/workflows/deploy.yml # 빌드 확인용 CI (배포 안 함)
-├── netlify.toml                # Netlify 빌드/헤더 설정
+├── netlify/                    # 서버 함수 (functions/send-alarms, send-test · lib/push.ts)
+├── netlify.toml                # Netlify 빌드/헤더/함수 설정
 ├── package.json                # 루트 (workspaces: frontend)
 ├── CLAUDE.md
 └── README.md
@@ -198,6 +199,14 @@ interface Settings {
 - **CI (GitHub Actions)**: Node 22로 `npm install` + `npm run build`만 확인 (Netlify 빌드 명령과 동일)
 - **의존성 lock 파일**: npm workspaces 구조라 루트 `package-lock.json` 하나만 사용 (`frontend/package-lock.json` 없음). 패키지 추가는 루트에서 `npm install <패키지> -w frontend`
 - **Netlify CLI**: 프로젝트 의존성이 아니라 전역 설치(`/opt/homebrew/bin/netlify`)를 사용
+- **Web Push (앱 종료 상태 알림)**:
+  - 앱이 일정 저장 시 `alarmAt`(UTC ISO)·`alarmSent`를 함께 저장 (`utils/alarm.ts` `getPushAlarmFields`, 기존 일정은 동기화 시 자동 백필)
+  - 관리자 화면 '푸시 알림' 토글 → `lib/pushService.ts`가 구독 정보를 `users/{uid}/pushSubscriptions/{deviceId}`에 저장
+  - `netlify/functions/send-alarms.mts`: 1분마다 실행, 최근 10분 내 `alarmAt` 일정을 찾아 푸시 발송 후 `alarmSent=true`
+  - `netlify/functions/send-test.mts`: 관리자 화면 '테스트 알림 보내기'
+  - 푸시 구독 기기는 앱 내 알람(`useNotification`)을 건너뜀 (중복 방지)
+  - Netlify 환경변수: `VITE_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (로컬은 루트 `.env`, `frontend/.env.local` — Git 미포함)
+  - 아이폰: iOS 16.4+, Safari '홈 화면에 추가'한 앱에서만 동작
 - **주의**: GitHub 저장소가 Public → `.env.local` 등 키 파일 절대 커밋 금지
 
 ### 개발 단계별 계획

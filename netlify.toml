@@ -31,3 +31,11 @@
   for = "/index.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+# 서버 함수 (Web Push 알람 발송)
+# - send-alarms: 1분마다 실행되는 예약 함수
+# - send-test:   관리자 화면 '테스트 알림 보내기'
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  external_node_modules = ["firebase-admin"]

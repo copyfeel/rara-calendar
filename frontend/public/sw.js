@@ -27,19 +27,30 @@ self.addEventListener('activate', event => {
   );
 });
 
-// 백그라운드에서 일정 업데이트 (Push 알림)
+// 백그라운드 Push 알림 (Netlify 함수 send-alarms / send-test 가 발송)
+// 서버는 { title, body, tag, url } JSON을 보내고, 일반 텍스트도 그대로 지원한다.
+// iOS는 푸시를 받고 알림을 띄우지 않으면 구독을 해지하므로 항상 알림을 표시한다.
 self.addEventListener('push', event => {
-  if (!event.data) return;
+  let payload = {};
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch {
+      payload = { body: event.data.text() };
+    }
+  }
 
   const options = {
-    body: event.data.text(),
+    body: payload.body || '새 알림이 있습니다',
     icon: '/favicon.svg',
     badge: '/favicon.svg',
     vibrate: [100, 50, 100],
+    tag: payload.tag,
+    data: { url: payload.url || '/' },
   };
 
   event.waitUntil(
-    self.registration.showNotification('Rara Calendar', options)
+    self.registration.showNotification(payload.title || 'Rara Calendar', options)
   );
 });
 

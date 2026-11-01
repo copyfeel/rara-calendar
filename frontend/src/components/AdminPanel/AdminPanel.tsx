@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
+import { useAuthStore } from '../../store/authStore';
 import { getNotificationPermission, requestNotificationPermission } from '../../utils/alarm';
+import {
+  getPushSupport,
+  isPushActiveOnThisDevice,
+  subscribePush,
+  unsubscribePush,
+  setPushEnabled,
+  sendTestPush,
+} from '../../lib/pushService';
 
 const PERMISSION_LABEL: Record<string, string> = {
   granted: '허용됨',
@@ -11,7 +20,12 @@ const PERMISSION_LABEL: Record<string, string> = {
 
 const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { settings, updateSettings } = useEventStore();
+  const { user } = useAuthStore();
   const [notifyPermission, setNotifyPermission] = useState(getNotificationPermission());
+  const pushSupport = getPushSupport();
+  const [pushActive, setPushActive] = useState(isPushActiveOnThisDevice());
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMessage, setPushMessage] = useState('');
 
   const handleThemeChange = (theme: 'pastelGray' | 'light' | 'dark') => {
     updateSettings({ theme });
@@ -21,6 +35,50 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const next = !settings.alarmEnabled;
     updateSettings({ alarmEnabled: next });
     if (next) setNotifyPermission(await requestNotificationPermission());
+    if (user && pushActive) {
+      setPushEnabled(user.uid, next).catch((err) => console.error('Error updating push setting:', err));
+    }
+  };
+
+  const handlePushToggle = async () => {
+    if (!user || pushBusy) return;
+    setPushBusy(true);
+    setPushMessage('');
+    try {
+      if (pushActive) {
+        await unsubscribePush(user.uid);
+        setPushActive(false);
+        setPushMessage('이 기기의 푸시 알림을 해제했습니다');
+      } else {
+        await subscribePush(user.uid);
+        setPushActive(true);
+        setPushMessage('이 기기에서 푸시 알림을 받습니다');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      setPushMessage(
+        message === 'permission-denied'
+          ? '알림 권한이 허용되지 않았습니다. 설정에서 이 앱의 알림을 허용해주세요'
+          : '푸시 알림 설정에 실패했습니다'
+      );
+    } finally {
+      setNotifyPermission(getNotificationPermission());
+      setPushBusy(false);
+    }
+  };
+
+  const handlePushTest = async () => {
+    if (pushBusy) return;
+    setPushBusy(true);
+    setPushMessage('');
+    try {
+      const { sent } = await sendTestPush();
+      setPushMessage(sent > 0 ? '테스트 알림을 보냈습니다. 잠시 후 도착합니다' : '보낼 수 있는 기기가 없습니다');
+    } catch {
+      setPushMessage('테스트 알림 발송에 실패했습니다');
+    } finally {
+      setPushBusy(false);
+    }
   };
 
   const handleFontChange = (font: string) => {
@@ -101,6 +159,51 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 />
               </button>
             </div>
+          </div>
+
+          {/* 푸시 알림 설정 (서버 발송, 앱이 꺼져 있어도 도착) */}
+          <div className="border-t border-pastel-200 pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-pastel-700">푸시 알림</h3>
+                <p className="text-xs text-pastel-500 mt-1">
+                  앱이 꺼져 있어도 이 기기로 일정 알림을 받습니다
+                </p>
+              </div>
+              {pushSupport === 'supported' && (
+                <button
+                  onClick={handlePushToggle}
+                  disabled={pushBusy}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
+                    pushActive ? 'bg-green-500' : 'bg-pastel-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      pushActive ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              )}
+            </div>
+            {pushSupport === 'ios-needs-home-screen' && (
+              <p className="text-xs text-red-500 mt-2">
+                아이폰은 Safari에서 공유 → '홈 화면에 추가'로 설치한 앱에서만 푸시 알림을 받을 수 있습니다 (iOS 16.4 이상)
+              </p>
+            )}
+            {pushSupport === 'unsupported' && (
+              <p className="text-xs text-red-500 mt-2">이 브라우저는 푸시 알림을 지원하지 않습니다</p>
+            )}
+            {pushActive && (
+              <button
+                onClick={handlePushTest}
+                disabled={pushBusy}
+                className="mt-3 px-3 py-1.5 text-xs border border-pastel-300 text-pastel-700 rounded-lg hover:bg-pastel-50 disabled:opacity-50"
+              >
+                테스트 알림 보내기
+              </button>
+            )}
+            {pushMessage && <p className="text-xs text-pastel-600 mt-2">{pushMessage}</p>}
           </div>
 
           {/* 폰트 설정 */}
