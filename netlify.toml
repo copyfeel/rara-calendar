@@ -5,6 +5,10 @@
   # 배포할 디렉토리
   publish = "frontend/dist"
 
+# 빌드·함수 Node 버전 (firebase-admin 하위 의존성 jose가 ESM 전용 → Node 22 필요)
+[build.environment]
+  NODE_VERSION = "22"
+
 # 리다이렉트 설정 (SPA를 위한 설정)
 [[redirects]]
   from = "/*"
