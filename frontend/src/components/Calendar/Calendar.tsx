@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import ImportantStar from '../ImportantStar/ImportantStar';
 import dayjs from 'dayjs';
 import { useEventStore } from '../../store/eventStore';
 import {
@@ -145,6 +146,10 @@ const Calendar: React.FC<CalendarProps> = ({ currentMonth, onMonthChange }) => {
                       <span className="text-pastel-orange font-semibold leading-none" style={{ fontSize: '8px' }}>
                         오늘
                       </span>
+                    )}
+                    {/* 중요 날짜: 일정 중 하나라도 중요 표시면 빨간 별 */}
+                    {dayEvents.some(e => e.important) && (
+                      <ImportantStar size={9} className="text-red-500 self-center" />
                     )}
                   </div>
                   {isCurrentMonth && (

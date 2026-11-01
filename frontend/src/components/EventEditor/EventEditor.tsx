@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import ImportantStar from '../ImportantStar/ImportantStar';
 import { useEventStore } from '../../store/eventStore';
 import type { Event } from '../../types/event';
 import {
@@ -66,6 +67,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
     editingEvent ? (editingEvent.alarmEnabled === true) : false
   );
   const [notifyPermission, setNotifyPermission] = useState(getNotificationPermission());
+  const [important, setImportant] = useState(editingEvent?.important === true);
   const [showSymbolPicker, setShowSymbolPicker] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const symbolPickerRef = useRef<HTMLDivElement>(null);
@@ -130,6 +132,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
       alarmEnabled,
       useTime,
       useCategory,
+      important,
     };
 
     if (editingEvent) {
@@ -209,6 +212,20 @@ const EventEditor: React.FC<EventEditorProps> = ({ onClose, editingEvent }) => {
                   </div>
                 )}
               </div>
+              {/* 중요 날짜 표시: 켜면 캘린더 날짜 옆에 빨간 별 */}
+              <button
+                type="button"
+                onClick={() => setImportant(v => !v)}
+                title="중요 날짜 표시"
+                aria-pressed={important}
+                className={`leading-none px-1.5 py-0.5 rounded border transition select-none flex items-center ${
+                  important
+                    ? 'border-red-300 bg-red-50 text-red-500'
+                    : 'border-pastel-200 text-pastel-400 hover:bg-pastel-100'
+                }`}
+              >
+                <ImportantStar size={16} filled={important} />
+              </button>
             </div>
             <textarea
               ref={descriptionRef}
